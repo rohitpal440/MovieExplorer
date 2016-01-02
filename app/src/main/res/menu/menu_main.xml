@@ -1,0 +1,30 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:mContext="com.technobells.rohit.movieexplorer.MainActivity">
+    <item
+        android:id="@+id/menu_item_favorite"
+        android:icon="@drawable/ic_favorite_border_white_24dp"
+        android:title="Favorite"
+        app:showAsAction = "ifRoom"
+        />
+
+    <item
+        android:id="@+id/menu_item_sort"
+        android:icon="@drawable/ic_sort_white"
+        android:title="Sort By"
+        app:showAsAction="ifRoom"
+        >
+        <menu>
+            <item
+                android:id="@+id/action_sort_by_popularity"
+                android:title="@string/sort_by_popularity"
+                />
+            <item
+                android:id="@+id/action_sort_by_rating"
+                android:title="@string/sort_by_rating"
+                />
+        </menu>
+    </item>
+
+</menu>

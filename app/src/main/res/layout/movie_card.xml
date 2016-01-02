@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/movie_card_item"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    card_view:cardElevation = "4dp"
+    card_view:cardCornerRadius = "3dp"
+    android:layout_margin="5dp"
+
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/movie_card_item_image"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+
+            />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            >
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:src="@drawable/ic_star_black_white"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                />
+            <TextView
+                android:id="@+id/movie_card_item_rating_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="7.8"
+                android:paddingLeft="2dp"
+                android:paddingRight="3dp"
+                android:layout_weight="3"
+                />
+
+
+            <TextView
+                android:id="@+id/movie_card_item_release_date"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:layout_weight="2"
+                android:text="2016"/>
+        </LinearLayout>
+
+
+
+
+    </LinearLayout>
+
+</android.support.v7.widget.CardView>
