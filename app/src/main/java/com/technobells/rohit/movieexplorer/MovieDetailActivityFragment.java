@@ -57,7 +57,7 @@ public class MovieDetailActivityFragment extends Fragment {
         Log.i(LOG_TAG, "Fetching the Related data>>>>>>>>>");
         Object temp = new Object();
         temp = movie;
-        mAdapter.appendObject(temp);
+        mAdapter.appendObject(temp,0);
         fetchVideos();
         fetchCast();
         fetchReviews();
@@ -77,16 +77,15 @@ public class MovieDetailActivityFragment extends Fragment {
                 Log.i(LOG_TAG,"Got JsonRequestMovieVideo Result with id : " + jsonRequestMovieVideoResult.getId());
                 if (jsonRequestMovieVideoResult != null) {
                     ArrayList<Video> results = (ArrayList<Video>) jsonRequestMovieVideoResult.getVideos();
-                    Log.i(LOG_TAG,"Got "+results.size()+" Videos");
+
                     videos.clear();
                     videos.addAll(results);
                     ArrayList<Object> temp = new ArrayList<Object>();
                     temp.add("Related Videos");
                     temp.addAll(results);
-                    mAdapter.appendObjectList(temp);
-//                    movieItemList.add("Related Videos");
-//                    movieItemList.addAll(videos);
-                }else{
+                    Log.i(LOG_TAG,"Got "+results.size()+" Videos.\n Inserting Video Section with :"+temp.size()+" values.");
+                    mAdapter.appendObjectList(temp,1);
+              }else{
                     Log.e(LOG_TAG,"Getting null object of (VIDEO) JsonRequestMovieVideoResult");
                     try {
                         String str =response.errorBody().string();
@@ -117,15 +116,15 @@ public class MovieDetailActivityFragment extends Fragment {
                 JsonRequestMovieCreditsResult jsonRequestMovieCreditsResult = response.body();
                 if (jsonRequestMovieCreditsResult != null) {
                     ArrayList<Cast> results = (ArrayList<Cast>) jsonRequestMovieCreditsResult.getCast();
-                    Log.i(LOG_TAG,"Got "+results.size()+" Cast Members");
+
                     casts.addAll(results);
                     SectionDataModel castSection = new SectionDataModel();
                     castSection.setSectionTitle("Star Cast ");
                     castSection.setAllItemsInSection(casts,null);
-
                     Object temp = new Object();
                     temp =  castSection;
-                    mAdapter.appendObject(temp);
+                    Log.i(LOG_TAG,"Got "+results.size()+" Cast Members.\n Inserting Cast Section");
+                    mAdapter.appendObject(temp,(videos.size()>0?videos.size()+1:0)+1);
                     //movieItemList.add(castSection);
 
                 }else{
@@ -159,14 +158,15 @@ public class MovieDetailActivityFragment extends Fragment {
                 JsonRequestMovieReviewResult jsonRequestMovieReviewResult = response.body();
                 if (jsonRequestMovieReviewResult != null) {
                     ArrayList<Review> results = (ArrayList<Review>) jsonRequestMovieReviewResult.getReviews();
-                    Log.i(LOG_TAG,"Got "+results.size()+" Reviews");
+
                     reviews.clear();
                     reviews.addAll(results);
                     if(results.size() > 0){
                         ArrayList<Object> temp = new ArrayList<Object>();
                         temp.add("Reviews");
                         temp.addAll(results);
-                        mAdapter.appendObjectList(temp);
+                        Log.i(LOG_TAG,"Got "+results.size()+" Reviews.\nInserting Review Section with "+temp.size()+" values.");
+                        mAdapter.appendObjectList(temp,(videos.size()>0?videos.size()+1:0)+(casts.size() > 0 ?1:0)+1);
                     }
 
                 }else{
@@ -200,7 +200,7 @@ public class MovieDetailActivityFragment extends Fragment {
                 JsonRequestDiscoverMovieResult jsonRequestDiscoverMovieResult = response.body();
                 if (jsonRequestDiscoverMovieResult != null) {
                     ArrayList<Movie> results = (ArrayList<Movie>) jsonRequestDiscoverMovieResult.getResults();
-                    Log.i(LOG_TAG,"Got : " + results.size() + " similar movies");
+
 
                     similarMovies.addAll(results);
 
@@ -211,7 +211,8 @@ public class MovieDetailActivityFragment extends Fragment {
                     //movieItemList.add(similarMoviesSection);
                     Object temp = new Object();
                     temp =  similarMoviesSection;
-                    mAdapter.appendObject(temp);
+                    Log.i(LOG_TAG,"Got : " + results.size() + " similar movies");
+                    mAdapter.appendObject(temp,(videos.size()>0?videos.size()+1:0)+(casts.size()>0?1:0)+(reviews.size()>0?reviews.size()+1:0)+1);
 
 
                 }else{
@@ -246,7 +247,6 @@ public class MovieDetailActivityFragment extends Fragment {
         recyclerView.setAdapter(mAdapter);
 
 
-
         if(savedInstanceState==null
                 || ! savedInstanceState.containsKey(SAVED_VIDEO_LIST)
                 || ! savedInstanceState.containsKey(SAVED_REVIEW_LIST)  ){
@@ -270,7 +270,7 @@ public class MovieDetailActivityFragment extends Fragment {
         movieItemList.add("Reviews");
         movieItemList.addAll(reviews);
         mAdapter.clear();
-        mAdapter.appendObjectList(movieItemList);
+        mAdapter.appendObjectList(movieItemList,0);
     }
 
 

@@ -1,6 +1,8 @@
 package com.technobells.rohit.movieexplorer.adapter;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -38,21 +40,22 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     private ArrayList<Object> movieItems;
     private Context mContext;
-
     public MovieDetailAdapter(Context context){
         this.mContext = context;
         movieItems = new ArrayList<>();
     }
 
-    public void appendObject(Object object){
-        movieItems.add(object);
-        notifyItemRangeInserted(movieItems.size(),1);
+    public void appendObject(Object object,int pos){
+        movieItems.add(pos,object);
+        Log.i(LOG_TAG,"Appending Object a pos:" + pos);
+        notifyItemRangeInserted(pos,1);
+
     }
 
-    public void appendObjectList(ArrayList<Object> list){
-        movieItems.addAll(list);
-        Log.i(LOG_TAG,"Appending all "+list.size() + " Objects to adapter.\n Now Adapter Contains "+movieItems.size()+" object");
-        notifyItemRangeInserted(movieItems.size(),list.size());
+    public void appendObjectList(ArrayList<Object> list,int pos){
+        movieItems.addAll(pos,list);
+        Log.i(LOG_TAG,"Appending all "+list.size() + " Objects  at postion ;"+pos+" to adapter.\n Now Adapter Contains "+movieItems.size()+" object");
+        notifyItemRangeInserted(pos,list.size());
     }
 
 //    public void addAll(ArrayList<Object> list){
@@ -110,29 +113,44 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         @Bind(R.id.video_item_share_buttor)
         ImageView videoShareAction;
 
-        int position;
-
+        String videoId;
+        String movieName;
         public VideoViewHolder(View view){
             super(view);
             ButterKnife.bind(this,view);
-            poster.setOnClickListener(this);
-            poster.setOnLongClickListener(this);
+            poster.setOnClickListener(new View.OnClickListener(){
+                @Override
+                public void onClick(View v){
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v="+videoId));
+                    v.getContext().startActivity(Intent.createChooser(intent,"Share Video using"));
+                }
+            });
+            poster.setOnLongClickListener(new View.OnLongClickListener(){
+                @Override
+                public boolean onLongClick(View v){
+                    Toast.makeText(v.getContext(),"You are wasting your energy ",Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+            });
             videoShareAction.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     System.out.println("You have Just Clicked on Share button");
-
-                    Toast.makeText(v.getContext(),
-                            "You have just clicked on Share Action at pos"+ position,
-                            Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(Intent.ACTION_SEND);
+                    intent.putExtra(Intent.EXTRA_TEXT,"Hi, Check this new "+type.getText().toString()+" of "+ movieName +" \n "+ Uri.parse("http://www.youtube.com/watch?v="+videoId));
+                    intent.setType("text/plain");
+                    v.getContext().startActivity(Intent.createChooser(intent,"Share Video using"));
                 }
             });
         }
 
-        public void setPosition(int pos){
-            position = pos;
+        public void setVideoId(String videoId){
+            this.videoId=videoId;
         }
 
+        public void setMovieName(String movieName){
+            this.movieName = movieName;
+        }
 //        public void setClickListener(ItemClickListener itemClickListener){
 //            this.clickListener = itemClickListener;
 //        }
@@ -311,7 +329,9 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         holder.name.setText(video.getName());
         holder.type.setText(video.getType());
         holder.lang.setText(video.getIso6391());
-        holder.setPosition(pos);
+        holder.setVideoId(video.getKey());
+        Movie movie = (Movie) movieItems.get(0);
+        holder.setMovieName(movie.getTitle());
 //        holder.setClickListener(new ItemClickListener() {
 //            @Override
 //            public void onClick(View view, int position, boolean isLongClick) {
