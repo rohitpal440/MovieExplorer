@@ -5,5 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.technobells.rohit.movieexplorer.MovieDetailActivityFragment"
-    tools:showIn="@layout/activity_movie_detail">
-</android.support.v7.widget.RecyclerView>
+    tools:showIn="@layout/activity_movie_detail"
+    />
+
+
+
+

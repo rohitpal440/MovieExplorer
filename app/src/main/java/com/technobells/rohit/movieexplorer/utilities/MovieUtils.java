@@ -2,6 +2,10 @@ package com.technobells.rohit.movieexplorer.utilities;
 
 import android.util.Log;
 
+import com.google.android.youtube.player.YouTubeApiServiceUtil;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.logging.HttpLoggingInterceptor;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -17,14 +21,18 @@ public class MovieUtils {
     private static final String LOG_TAG= MovieUtils.class.getSimpleName();
     public static final String BASE_URL="http://api.themoviedb.org/3/";
     public static final String BASE_URL_IMAGE= "http://image.tmdb.org/t/p/";
-    public static final String BASE_URL_VIDEO = "http://img.youtube.com/vi/";
+    public static final String BASE_URL_VIDEO_THUMBNAIL = "http://img.youtube.com/vi/";
+    public static final String  MIN_VOTE_COUNT = "1000";
     public static final Retrofit retrofitInstance;
-
-
     static {
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
+        OkHttpClient httpClient = new OkHttpClient();
+        httpClient.interceptors().add(logging);
         retrofitInstance = new Retrofit.Builder()
                 .baseUrl(MovieUtils.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
+                .client(httpClient)
                 .build();
     }
 

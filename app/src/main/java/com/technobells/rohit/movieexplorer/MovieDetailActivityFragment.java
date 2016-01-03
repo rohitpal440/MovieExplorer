@@ -2,6 +2,7 @@ package com.technobells.rohit.movieexplorer;
 
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -25,6 +26,8 @@ import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import retrofit.Call;
 import retrofit.Callback;
 import retrofit.Response;
@@ -36,7 +39,6 @@ import retrofit.Retrofit;
 public class MovieDetailActivityFragment extends Fragment {
     private final String LOG_TAG = MovieDetailActivityFragment.class.getSimpleName();
 
-    private RecyclerView recyclerView;
     private MovieDetailAdapter mAdapter;
     private Movie movie;
     private ArrayList<Object> movieItemList = new ArrayList<>();
@@ -49,14 +51,16 @@ public class MovieDetailActivityFragment extends Fragment {
     private final String SAVED_MOVIE_ITEM = "movieItem";
     private final String SAVED_VIDEO_LIST = "videos";
     private final String SAVED_REVIEW_LIST = "reviews";
+    @Bind(R.id.fragment_movie_detail_recycler_view)
+    RecyclerView recyclerView;
 
+    int progress =0;
     public MovieDetailActivityFragment() {
     }
 
     private void updateMovieDetailView() {
         Log.i(LOG_TAG, "Fetching the Related data>>>>>>>>>");
-        Object temp = new Object();
-        temp = movie;
+        Object temp = movie;
         mAdapter.appendObject(temp,0);
         fetchVideos();
         fetchCast();
@@ -65,7 +69,6 @@ public class MovieDetailActivityFragment extends Fragment {
     }
 
     private void fetchVideos(){
-        Log.i(LOG_TAG,"Fetching REVIEWS>>>>>>>>>");
         MovieApiService moviesApiService = MovieUtils.retrofitInstance.create(MovieApiService.class);
         Call<JsonRequestMovieVideoResult> call = moviesApiService.getMovieVideoFeed(
                 Long.toString(movie.getId()),BuildConfig.MY_MOVIE_DB_API_KEY);
@@ -77,15 +80,16 @@ public class MovieDetailActivityFragment extends Fragment {
                 Log.i(LOG_TAG,"Got JsonRequestMovieVideo Result with id : " + jsonRequestMovieVideoResult.getId());
                 if (jsonRequestMovieVideoResult != null) {
                     ArrayList<Video> results = (ArrayList<Video>) jsonRequestMovieVideoResult.getVideos();
-
-                    videos.clear();
-                    videos.addAll(results);
-                    ArrayList<Object> temp = new ArrayList<Object>();
-                    temp.add("Related Videos");
-                    temp.addAll(results);
-                    Log.i(LOG_TAG,"Got "+results.size()+" Videos.\n Inserting Video Section with :"+temp.size()+" values.");
-                    mAdapter.appendObjectList(temp,1);
-              }else{
+                    if(results.size()>0){
+                        ArrayList<Object> temp = new ArrayList<Object>();
+                        temp.add("Related Videos");
+                        temp.addAll(results);
+                        Log.i(LOG_TAG,"Got "+results.size()+" Videos.\n Inserting Video Section with :"+temp.size()+" values.");
+                        mAdapter.appendObjectList(temp,1);
+                        videos.clear();
+                        videos.addAll(results);
+                    }
+                }else{
                     Log.e(LOG_TAG,"Getting null object of (VIDEO) JsonRequestMovieVideoResult");
                     try {
                         String str =response.errorBody().string();
@@ -94,18 +98,18 @@ public class MovieDetailActivityFragment extends Fragment {
                     }catch (IOException e){
                         Log.e(LOG_TAG,"IOexception inside the response");
                     }
-
                 }
+
             }
             @Override
             public void onFailure(Throwable t){
                 Log.i(LOG_TAG,"Retrofit Response failure for Video Fetch Request");
+
             }
         });
     }
 
     private void fetchCast(){
-        Log.i(LOG_TAG,"Fetching Cast Member >>>>>>>>>");
         MovieApiService moviesApiService = MovieUtils.retrofitInstance.create(MovieApiService.class);
         Call<JsonRequestMovieCreditsResult> call = moviesApiService.getMovieCreditsFeed(
                 Long.toString(movie.getId()),BuildConfig.MY_MOVIE_DB_API_KEY);
@@ -116,17 +120,16 @@ public class MovieDetailActivityFragment extends Fragment {
                 JsonRequestMovieCreditsResult jsonRequestMovieCreditsResult = response.body();
                 if (jsonRequestMovieCreditsResult != null) {
                     ArrayList<Cast> results = (ArrayList<Cast>) jsonRequestMovieCreditsResult.getCast();
+                    if(results.size()>0){
 
-                    casts.addAll(results);
-                    SectionDataModel castSection = new SectionDataModel();
-                    castSection.setSectionTitle("Star Cast ");
-                    castSection.setAllItemsInSection(casts,null);
-                    Object temp = new Object();
-                    temp =  castSection;
-                    Log.i(LOG_TAG,"Got "+results.size()+" Cast Members.\n Inserting Cast Section");
-                    mAdapter.appendObject(temp,(videos.size()>0?videos.size()+1:0)+1);
-                    //movieItemList.add(castSection);
-
+                        SectionDataModel castSection = new SectionDataModel();
+                        castSection.setSectionTitle("Star Cast ");
+                        castSection.setAllItemsInSection(results,null);
+                        Object temp =  castSection;
+                        Log.i(LOG_TAG,"Got "+results.size()+" Cast Members.\n Inserting Cast Section");
+                        mAdapter.appendObject(temp,(videos.size()>0?videos.size()+1:0)+1);
+                        casts.addAll(results);
+                    }
                 }else{
                     Log.e(LOG_TAG,"Getting null object of (Cast) JsonRequestMovieReviewResult ");
                     try {
@@ -138,16 +141,19 @@ public class MovieDetailActivityFragment extends Fragment {
                     }
 
                 }
+
             }
             @Override
             public void onFailure(Throwable t){
                 Log.i(LOG_TAG,"Retrofit Response failure for Cast Fetch Request");
+//                if(++progress >= 4){
+//                    swipeRefreshLayout.setRefreshing(false);
+//                }
             }
         });
     }
 
     private void fetchReviews(){
-        Log.i(LOG_TAG,"Fetching REVIEWS >>>>>>>>>");
         MovieApiService moviesApiService = MovieUtils.retrofitInstance.create(MovieApiService.class);
         Call<JsonRequestMovieReviewResult> call = moviesApiService.getMovieReviewFeed(
                Long.toString(movie.getId()),BuildConfig.MY_MOVIE_DB_API_KEY);
@@ -158,17 +164,15 @@ public class MovieDetailActivityFragment extends Fragment {
                 JsonRequestMovieReviewResult jsonRequestMovieReviewResult = response.body();
                 if (jsonRequestMovieReviewResult != null) {
                     ArrayList<Review> results = (ArrayList<Review>) jsonRequestMovieReviewResult.getReviews();
-
-                    reviews.clear();
-                    reviews.addAll(results);
                     if(results.size() > 0){
                         ArrayList<Object> temp = new ArrayList<Object>();
                         temp.add("Reviews");
                         temp.addAll(results);
                         Log.i(LOG_TAG,"Got "+results.size()+" Reviews.\nInserting Review Section with "+temp.size()+" values.");
                         mAdapter.appendObjectList(temp,(videos.size()>0?videos.size()+1:0)+(casts.size() > 0 ?1:0)+1);
+                        reviews.clear();
+                        reviews.addAll(results);
                     }
-
                 }else{
                     Log.e(LOG_TAG,"Getting null object of (REVIEW) JsonRequestMovieReviewResult ");
                     try {
@@ -178,8 +182,8 @@ public class MovieDetailActivityFragment extends Fragment {
                     }catch (IOException e){
                         Log.e(LOG_TAG,"IOexception inside the response");
                     }
-
                 }
+
             }
             @Override
             public void onFailure(Throwable t){
@@ -189,7 +193,6 @@ public class MovieDetailActivityFragment extends Fragment {
     }
 
     private void fetchSimilarMovies(){
-        Log.i(LOG_TAG,"Fetching Cast Member >>>>>>>>>");
         MovieApiService moviesApiService = MovieUtils.retrofitInstance.create(MovieApiService.class);
         Call<JsonRequestDiscoverMovieResult> call = moviesApiService.getSimilarMovieFeed(
                 Long.toString(movie.getId()),
@@ -201,20 +204,16 @@ public class MovieDetailActivityFragment extends Fragment {
                 if (jsonRequestDiscoverMovieResult != null) {
                     ArrayList<Movie> results = (ArrayList<Movie>) jsonRequestDiscoverMovieResult.getResults();
 
+                    if(results.size()>0){
+                        SectionDataModel similarMoviesSection = new SectionDataModel();
+                        similarMoviesSection.setSectionTitle("Similar Movies");
+                        similarMoviesSection.setAllItemsInSection(null,results);
 
-                    similarMovies.addAll(results);
-
-                    SectionDataModel similarMoviesSection = new SectionDataModel();
-                    similarMoviesSection.setSectionTitle("Similar Movies");
-                    similarMoviesSection.setAllItemsInSection(null,results);
-
-                    //movieItemList.add(similarMoviesSection);
-                    Object temp = new Object();
-                    temp =  similarMoviesSection;
-                    Log.i(LOG_TAG,"Got : " + results.size() + " similar movies");
-                    mAdapter.appendObject(temp,(videos.size()>0?videos.size()+1:0)+(casts.size()>0?1:0)+(reviews.size()>0?reviews.size()+1:0)+1);
-
-
+                        Object temp = similarMoviesSection;
+                        Log.i(LOG_TAG,"Got : " + results.size() + " similar movies");
+                        mAdapter.appendObject(temp,(videos.size()>0?videos.size()+1:0)+(casts.size()>0?1:0)+(reviews.size()>0?reviews.size()+1:0)+1);
+                        similarMovies.addAll(results);
+                    }
                 }else{
                     Log.e(LOG_TAG,"Getting null object of (Similar Movies) JsonRequestMovieReviewResult ");
                     try {
@@ -224,8 +223,8 @@ public class MovieDetailActivityFragment extends Fragment {
                     }catch (IOException e){
                         Log.e(LOG_TAG,"IOexception inside the response");
                     }
-
                 }
+
             }
             @Override
             public void onFailure(Throwable t){
@@ -242,10 +241,21 @@ public class MovieDetailActivityFragment extends Fragment {
         movie = getActivity().getIntent().getParcelableExtra("movieTag");
 
         mAdapter = new MovieDetailAdapter(getActivity());
-        recyclerView = (RecyclerView) rootView.findViewById(R.id.fragment_movie_detail_recycler_view);
+        ButterKnife.bind(this,rootView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(mAdapter);
-
+//        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+//            @Override
+//            public void onRefresh() {
+//                Log.i(LOG_TAG,"Refreshing");
+//                videos.clear();
+//                reviews.clear();
+//                casts.clear();
+//                similarMovies.clear();
+//                mAdapter.clear();
+//                updateMovieDetailView();
+//            }
+//        });
 
         if(savedInstanceState==null
                 || ! savedInstanceState.containsKey(SAVED_VIDEO_LIST)

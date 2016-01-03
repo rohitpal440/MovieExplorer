@@ -1,12 +1,19 @@
-<android.support.v7.widget.RecyclerView
+<android.support.v4.widget.SwipeRefreshLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/fragment_main_swipe_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     tools:mContext="com.technobells.rohit.movieexplorer.MainActivityFragment"
-    tools:showIn="@layout/activity_main"
-    android:id="@+id/grid_recycler_view"
+    tools:showIn="@layout/activity_main">
+
+<android.support.v7.widget.RecyclerView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/fragmen_main_grid_recycler_view"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:padding="@dimen/activity_horizontal_margin"
     android:clipToPadding="true"
     android:orientation ="vertical"
     />
+</android.support.v4.widget.SwipeRefreshLayout>

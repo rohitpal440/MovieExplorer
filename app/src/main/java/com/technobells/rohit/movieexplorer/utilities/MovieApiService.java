@@ -18,7 +18,7 @@ public interface MovieApiService {
     @GET("discover/movie")
     Call<JsonRequestDiscoverMovieResult> getDiscoverMovieFeed(@Query("sort_by") String sortBy,
                                                               @Query("page") int page,
-                                                              @Query("voteCount.gte") int minVoteCount,
+                                                              @Query("vote_count.gte") String minVoteCount,
                                                               @Query("api_key") String apiKey
     );
 

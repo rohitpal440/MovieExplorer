@@ -1,5 +1,6 @@
 package com.technobells.rohit.movieexplorer.adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -13,7 +14,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.youtube.player.YouTubeApiServiceUtil;
+import com.google.android.youtube.player.YouTubeInitializationResult;
+import com.google.android.youtube.player.YouTubeStandalonePlayer;
 import com.squareup.picasso.Picasso;
+import com.technobells.rohit.movieexplorer.BuildConfig;
 import com.technobells.rohit.movieexplorer.R;
 import com.technobells.rohit.movieexplorer.entity.SectionDataModel;
 import com.technobells.rohit.movieexplorer.entity.Movie;
@@ -37,12 +42,15 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private static final int REVIEW = 3;
     private static final int HEADER = 5 ;
     private static final int RECYCLER_VIEW = 6;
-
     private ArrayList<Object> movieItems;
     private Context mContext;
-    public MovieDetailAdapter(Context context){
-        this.mContext = context;
+    private Activity mActivity;
+    private static boolean IS_YOUTUBE_INSTALLED;
+    public MovieDetailAdapter(Activity activity){
+        this.mContext = activity;
+        this.mActivity = activity;
         movieItems = new ArrayList<>();
+        IS_YOUTUBE_INSTALLED = (YouTubeApiServiceUtil.isYouTubeApiServiceAvailable(mContext)== YouTubeInitializationResult.SUCCESS);
     }
 
     public void appendObject(Object object,int pos){
@@ -58,17 +66,12 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         notifyItemRangeInserted(pos,list.size());
     }
 
-//    public void addAll(ArrayList<Object> list){
-//        movieItems.addAll(list);
-//        Log.i(LOG_TAG,"Adding all "+list.size() + " Objects to adapter.\n Now Adapter Contains "+movieItems.size()+" Objects");
-//        notifyDataSetChanged();
-//    }
-
     /*
     clear data in MovieAdapter
      */
     public void clear(){
         movieItems.clear();
+        notifyDataSetChanged();
     }
 
      /*
@@ -101,7 +104,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public static class VideoViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener{
 
         //private ItemClickListener clickListener;
-
         @Bind(R.id.video_item_poster)
         ImageView poster;
         @Bind(R.id.video_item_name)
@@ -112,7 +114,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         TextView type;
         @Bind(R.id.video_item_share_buttor)
         ImageView videoShareAction;
-
+        Activity activity;
         String videoId;
         String movieName;
         public VideoViewHolder(View view){
@@ -121,14 +123,23 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             poster.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View v){
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v="+videoId));
-                    v.getContext().startActivity(Intent.createChooser(intent,"Share Video using"));
+                    if(IS_YOUTUBE_INSTALLED){
+                       showVideoInLightBox();
+                    }else {
+                        Log.i("VideoHolder","Youtube is not installed in the phone");
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v=" + videoId));
+                        v.getContext().startActivity(Intent.createChooser(intent, "Open Video using"));
+                    }
                 }
             });
             poster.setOnLongClickListener(new View.OnLongClickListener(){
                 @Override
                 public boolean onLongClick(View v){
-                    Toast.makeText(v.getContext(),"You are wasting your energy ",Toast.LENGTH_SHORT).show();
+                    if(IS_YOUTUBE_INSTALLED){
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v=" + videoId));
+                        v.getContext().startActivity(Intent.createChooser(intent, "Open Video using"));
+                    }else
+                        Toast.makeText(v.getContext(),"You are wasting your energy ",Toast.LENGTH_SHORT).show();
                     return true;
                 }
             });
@@ -143,11 +154,16 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 }
             });
         }
-
+        public void setActivity(Activity activity){
+            this.activity = activity;
+        }
+        public void showVideoInLightBox(){
+            activity.startActivity(YouTubeStandalonePlayer.createVideoIntent(activity,
+                    BuildConfig.My_GOOGLE_ANDROID_API, videoId, 0, true, true));
+        }
         public void setVideoId(String videoId){
             this.videoId=videoId;
         }
-
         public void setMovieName(String movieName){
             this.movieName = movieName;
         }
@@ -324,8 +340,9 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public void configureVideoViewHolder(VideoViewHolder holder,int pos){
         Video video = (Video) movieItems.get(pos);
         String QUALITY = "/hqdefault.jpg";
-        Picasso.with(mContext).load(MovieUtils.BASE_URL_VIDEO + video.getKey() + QUALITY).placeholder(R.drawable.grey_placeholder)
+        Picasso.with(mContext).load(MovieUtils.BASE_URL_VIDEO_THUMBNAIL + video.getKey() + QUALITY).placeholder(R.drawable.grey_placeholder)
                 .into(holder.poster);
+        holder.setActivity(mActivity);
         holder.name.setText(video.getName());
         holder.type.setText(video.getType());
         holder.lang.setText(video.getIso6391());
@@ -364,7 +381,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         SectionDataModel sectionDataModel = (SectionDataModel) movieItems.get(pos);
         final LinearLayoutManager layoutManager =
                 new LinearLayoutManager(mContext,LinearLayoutManager.HORIZONTAL,false);
-
         holder.sectionTitle.setText(sectionDataModel.getSectionTitle());
         HorizontalRecyclerAdapter adapter = new HorizontalRecyclerAdapter(mContext,sectionDataModel.getAllItemsInSection());
         holder.innerRecyclerView.setAdapter(adapter);

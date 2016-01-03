@@ -2,6 +2,7 @@ package com.technobells.rohit.movieexplorer;
 
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,6 +14,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.technobells.rohit.movieexplorer.adapter.MovieAdapter;
 import com.technobells.rohit.movieexplorer.entity.JsonRequestDiscoverMovieResult;
@@ -23,6 +25,8 @@ import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import retrofit.Call;
 import retrofit.Callback;
 import retrofit.Response;
@@ -33,7 +37,7 @@ import retrofit.Retrofit;
  */
 public class
 MainActivityFragment extends Fragment {
-
+    public static boolean load = true;
     private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
     private Boolean FAVORITE_FLAG = false;
     private String SAVED_MOVIE_LIST = "savedMovieList";
@@ -41,13 +45,14 @@ MainActivityFragment extends Fragment {
     private String SAVED_PAGE_NO = "page";
     private int MOVIE_LOADER = 0;
     private MovieAdapter movieAdapter;
-    private RecyclerView recyclerView;
     private ArrayList<Movie> movieArrayList= new ArrayList<>();
-    public static boolean load = true;
-
     private String sortBy="popularity.desc"; //Default sorting order
-    private int minVoteCount = 1000;
     private int page = 1;
+
+    @Bind(R.id.fragmen_main_grid_recycler_view)
+    RecyclerView recyclerView;
+    @Bind(R.id.fragment_main_swipe_container)
+    SwipeRefreshLayout swipeRefreshLayout;
 
     public MainActivityFragment() {
     }
@@ -61,7 +66,7 @@ MainActivityFragment extends Fragment {
         Call<JsonRequestDiscoverMovieResult> call = moviesApiService.getDiscoverMovieFeed(
                                                             sortBy,
                                                             page,
-                                                            minVoteCount,
+                                                            MovieUtils.MIN_VOTE_COUNT,
                                                             BuildConfig.MY_MOVIE_DB_API_KEY);
         call.enqueue(new Callback<JsonRequestDiscoverMovieResult>(){
             @Override
@@ -76,7 +81,7 @@ MainActivityFragment extends Fragment {
 
                     //if(page ==1) movieAdapter.clear();
                     movieAdapter.addAll(results);
-                    load = true;
+
                 }else{
                     Log.e(LOG_TAG,"Getting null object of JsonRequestDiscoverMovieResult");
                     try {
@@ -84,14 +89,19 @@ MainActivityFragment extends Fragment {
                         Log.e(LOG_TAG,str);
 
                     }catch (IOException e){
-                        Log.e(LOG_TAG,"IOexception inside the response errorBody");
+                        Log.e(LOG_TAG,"IOException inside the response errorBody");
                     }
 
                 }
+                swipeRefreshLayout.setRefreshing(false);
+                load = true;
             }
             @Override
             public void onFailure(Throwable t){
-                Log.i(LOG_TAG,"Retrofit Response failure");
+                Log.e(LOG_TAG,"Retrofit Response failure");
+                Toast.makeText(getContext(),"Failed to Load. \nCheck Your Internet Connection",Toast.LENGTH_SHORT).show();
+                load = true;
+                swipeRefreshLayout.setRefreshing(false);
             }
         });
 
@@ -110,12 +120,26 @@ MainActivityFragment extends Fragment {
 
         final GridLayoutManager gridLayoutManager =
                 new GridLayoutManager(getContext(),metrics.widthPixels/300);
-
         movieAdapter = new MovieAdapter(getContext());
-        recyclerView = (RecyclerView) rootView.findViewById(R.id.grid_recycler_view);
+        //recyclerView = (RecyclerView) rootView.findViewById(R.id.fragmen_main_grid_recycler_view);
+        ButterKnife.bind(this,rootView);
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(movieAdapter);
+
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                page =1;
+                updateMoviePoster();
+            }
+        });
+
+        // Configure the refreshing colors
+        swipeRefreshLayout.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
 
         /*
             Creating the listener for infinite scroll.
@@ -179,8 +203,8 @@ MainActivityFragment extends Fragment {
 
         int id = item.getItemId();
 
-        String sortByPopularity="popularity.desc";
-        String sortByRating="vote_average.desc";
+        String sortByPopularity = "popularity.desc";
+        String sortByRating = "vote_average.desc";
 
         switch(id){
            case R.id.menu_item_favorite:
@@ -217,9 +241,6 @@ MainActivityFragment extends Fragment {
                 return super.onOptionsItemSelected(item);
         }
     }
-
-
-
 
     @Override
     public void onSaveInstanceState(Bundle saveState){
