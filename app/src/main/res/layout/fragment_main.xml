@@ -12,7 +12,6 @@
     android:id="@+id/fragmen_main_grid_recycler_view"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="@dimen/activity_horizontal_margin"
     android:clipToPadding="true"
     android:orientation ="vertical"
     />

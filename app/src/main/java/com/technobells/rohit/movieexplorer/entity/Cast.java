@@ -179,7 +179,7 @@ public class Cast implements Parcelable{
         dest.writeString(profilePath);
     }
 
-
+    public Cast(){}
     private Cast(Parcel in){
         castId = in.readLong();
         character = in.readString();

@@ -12,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.youtube.player.YouTubeApiServiceUtil;
 import com.google.android.youtube.player.YouTubeInitializationResult;
@@ -112,7 +111,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         TextView lang;
         @Bind(R.id.video_item_type)
         TextView type;
-        @Bind(R.id.video_item_share_buttor)
+        @Bind(R.id.video_item_share_button)
         ImageView videoShareAction;
         Activity activity;
         String videoId;
@@ -138,8 +137,11 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     if(IS_YOUTUBE_INSTALLED){
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v=" + videoId));
                         v.getContext().startActivity(Intent.createChooser(intent, "Open Video using"));
-                    }else
-                        Toast.makeText(v.getContext(),"You are wasting your energy ",Toast.LENGTH_SHORT).show();
+                    }else{
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v=" + videoId));
+                        v.getContext().startActivity(Intent.createChooser(intent, "Open Video using"));
+                    }
+
                     return true;
                 }
             });
@@ -327,6 +329,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         /* Possible Image size are "w92", "w154", "w185", "w342", "w500", "w780", or "original" */
         //final String SIZE="w185/";
+        holder.posterImage.setAdjustViewBounds(true);
         Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w185/" + movie.getPosterPath()).placeholder(R.drawable.placeholder).into(holder.posterImage);
         Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w500/"+ movie.getBackdropPath()).placeholder(R.drawable.loading_placeholder).into(holder.backDropPoster);
         holder.title.setText(movie.getTitle());

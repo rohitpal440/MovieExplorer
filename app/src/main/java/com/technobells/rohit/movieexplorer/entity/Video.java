@@ -174,7 +174,7 @@ public class Video implements Parcelable {
     public int describeContents() {
         return 0;
     }
-
+    public Video(){}
     private Video(Parcel in){
         id = in.readString();
         iso6391 = in.readString();

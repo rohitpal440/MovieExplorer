@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.squareup.picasso.Picasso;
 import com.technobells.rohit.movieexplorer.utilities.ItemClickListener;
 import com.technobells.rohit.movieexplorer.MovieDetailActivity;
@@ -104,11 +105,9 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
 
         /* Possible Image size are "w92", "w154", "w185", "w342", "w500", "w780", or "original" */
         final String SIZE="w185/";
-
-        // Glide.with(mContext).load(baseUrl + SIZE + movie.getPosterPath()).into(holder.posterImage);
+        //Glide.with(mContext).load( MovieUtils.BASE_URL_IMAGE+ SIZE + movie.getPosterPath()).into(holder.posterImage);
         holder.posterImage.setAdjustViewBounds(true);
         Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + SIZE + movie.getPosterPath()).placeholder(R.drawable.placeholder).into(holder.posterImage);
-
         holder.setClickListener(new ItemClickListener() {
             @Override
             public void onClick(View view, int position, boolean isLongClick) {

@@ -26,7 +26,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_gravity="center_horizontal"
+                    android:layout_gravity="center_vertical"
                     >
 
                     <LinearLayout
@@ -41,6 +41,8 @@
                             android:id="@+id/movie_item_poster"
                             android:adjustViewBounds="true"
                             android:src="@drawable/placeholder"
+                            android:layout_marginLeft="50dp"
+                            android:layout_gravity="center_horizontal"
                             android:padding="8dp"/>
 
                     </LinearLayout>

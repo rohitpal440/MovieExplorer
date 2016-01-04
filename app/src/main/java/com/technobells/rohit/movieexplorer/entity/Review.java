@@ -110,6 +110,8 @@ public class Review implements Parcelable{
         return 0;
     }
 
+    public Review(){}
+
     private Review(Parcel in){
         id = in.readString();
         author = in.readString();

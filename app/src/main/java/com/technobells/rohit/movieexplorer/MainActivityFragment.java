@@ -14,6 +14,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Toast;
 
 import com.technobells.rohit.movieexplorer.adapter.MovieAdapter;
@@ -117,16 +118,15 @@ MainActivityFragment extends Fragment {
          */
         DisplayMetrics metrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
+        int columnCount = (metrics.widthPixels/(int)getResources().getDimension(R.dimen.column_width));
         final GridLayoutManager gridLayoutManager =
-                new GridLayoutManager(getContext(),metrics.widthPixels/300);
+                new GridLayoutManager(getContext(),columnCount>2?columnCount:2);
+
         movieAdapter = new MovieAdapter(getContext());
-        //recyclerView = (RecyclerView) rootView.findViewById(R.id.fragmen_main_grid_recycler_view);
         ButterKnife.bind(this,rootView);
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(movieAdapter);
-
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {

@@ -164,7 +164,8 @@ public class MovieDetailActivityFragment extends Fragment {
                 JsonRequestMovieReviewResult jsonRequestMovieReviewResult = response.body();
                 if (jsonRequestMovieReviewResult != null) {
                     ArrayList<Review> results = (ArrayList<Review>) jsonRequestMovieReviewResult.getReviews();
-                    if(results.size() > 0){
+                    if(results.size() == 0) results.add(MovieUtils.NO_REVIEW);
+
                         ArrayList<Object> temp = new ArrayList<Object>();
                         temp.add("Reviews");
                         temp.addAll(results);
@@ -172,7 +173,7 @@ public class MovieDetailActivityFragment extends Fragment {
                         mAdapter.appendObjectList(temp,(videos.size()>0?videos.size()+1:0)+(casts.size() > 0 ?1:0)+1);
                         reviews.clear();
                         reviews.addAll(results);
-                    }
+
                 }else{
                     Log.e(LOG_TAG,"Getting null object of (REVIEW) JsonRequestMovieReviewResult ");
                     try {
