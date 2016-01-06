@@ -11,8 +11,8 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 import com.technobells.rohit.movieexplorer.R;
-import com.technobells.rohit.movieexplorer.entity.Cast;
-import com.technobells.rohit.movieexplorer.entity.Movie;
+import com.technobells.rohit.movieexplorer.model.Cast;
+import com.technobells.rohit.movieexplorer.model.Movie;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 
 import java.util.ArrayList;
@@ -25,8 +25,6 @@ import butterknife.ButterKnife;
  */
 public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
     private static final String LOG_TAG = HorizontalRecyclerAdapter.class.getSimpleName();
-    private static final int CAST = 2;
-    private static final int SIMILAR = 4;
     private ArrayList<Object> itemsConnectedtoMovie = new ArrayList<>();
     private Context mContext;
 
@@ -102,10 +100,10 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
         Object object = itemsConnectedtoMovie.get(position);
         if(object instanceof Movie){
             Log.i(LOG_TAG,"the object type is Movie");
-            return SIMILAR;
+            return MovieUtils.SIMILAR;
         }else if(object instanceof Cast){
             Log.i(LOG_TAG,"the object type is Cast");
-            return CAST;
+            return MovieUtils.CAST;
         }
         Log.i(LOG_TAG,"Unable to determine the object type");
         return -1;
@@ -113,17 +111,17 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
 
 
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType){
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         RecyclerView.ViewHolder viewHolder;
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         switch (viewType){
 
-            case CAST:{
+            case MovieUtils.CAST:{
                 View view = inflater.inflate(R.layout.cast_card,parent,false);
                 viewHolder = new CastViewHolder(view);
                 break;
             }
-            case SIMILAR:{
+            case MovieUtils.SIMILAR:{
                 View view = inflater.inflate(R.layout.movie_card,parent,false);
                 viewHolder = new SimilarMovieViewHolder(view);
                 break;
@@ -143,12 +141,12 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
     public void onBindViewHolder(RecyclerView.ViewHolder holder,int pos){
         Log.i(LOG_TAG,"Inside onBindViewHolder Method");
         switch (holder.getItemViewType()){
-            case CAST:
+            case MovieUtils.CAST:
                 CastViewHolder castViewHolder = (CastViewHolder) holder;
                 configureCastViewHolder(castViewHolder,pos);
                 break;
 
-            case SIMILAR:
+            case MovieUtils.SIMILAR:
                 SimilarMovieViewHolder similarMovieViewHolder = (SimilarMovieViewHolder) holder;
                 configureSimilarMovieViewHolder(similarMovieViewHolder,pos);
                 break;

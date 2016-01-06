@@ -2,6 +2,8 @@ package com.technobells.rohit.movieexplorer.adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.DataSetObserver;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,12 +13,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.squareup.picasso.Picasso;
 import com.technobells.rohit.movieexplorer.utilities.ItemClickListener;
 import com.technobells.rohit.movieexplorer.MovieDetailActivity;
 import com.technobells.rohit.movieexplorer.R;
-import com.technobells.rohit.movieexplorer.entity.Movie;
+import com.technobells.rohit.movieexplorer.model.Movie;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 
 import java.util.ArrayList;
@@ -30,17 +31,26 @@ import butterknife.ButterKnife;
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
 
     private final String LOG_TAG = MovieAdapter.class.getSimpleName();
-
     private ArrayList<Movie> movies;
     private Context mContext;
-
+    private boolean mDataValid;
+    private int mRowIdColumn = MovieUtils.COL_MOVIE_ID;
+    private Cursor mCursor;
+    private DataSetObserver mDataSetObserver;
     public MovieAdapter(Context context){
         this.mContext = context;
-        movies = new ArrayList<Movie>();
+        movies = new ArrayList<>();
+
+        mCursor = null;
+        mDataValid = false;
+        mDataSetObserver = new NotifyingDataSetObserver();
+        if (mCursor != null) {
+            mCursor.registerDataSetObserver(mDataSetObserver);
+        }
+
     }
 
-    public static class ViewHolder
-            extends RecyclerView.ViewHolder
+    public static class ViewHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener, View.OnLongClickListener{
         private ItemClickListener clickListener;
         @Bind(R.id.movie_card_item_image)
@@ -75,6 +85,18 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
     }
 
 
+    public Cursor getCursor(){
+        return mCursor;
+    }
+
+    public void setCursor(Cursor cursor){
+        mCursor = cursor;
+        if(mCursor!=null){
+            mCursor.registerDataSetObserver(mDataSetObserver);
+        }
+        notifyDataSetChanged();
+    }
+
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType){
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_card,parent,false);
@@ -88,17 +110,19 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
         notifyDataSetChanged();
     }
 
-    /*
-    clear data in MovieAdapter
-     */
     public void clear(){
         movies.clear();
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-
-        final Movie movie = movies.get(position);
+        final Movie movie;
+        if (MovieUtils.FAVORITE_FLAG){
+            mCursor.moveToPosition(position);
+            movie = MovieUtils.getMovieFromCursor(mCursor, position);
+        }else{
+            movie = movies.get(position);
+        }
         holder.ratingTv.setText(String.format("%.1f",movie.getVoteAverage()));
         String releaseDate = MovieUtils.formateDate(movie.getReleaseDate(),"yyyy-MM-dd","yyyy");
         holder.releaseDateTv.setText(releaseDate);
@@ -126,7 +150,78 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
 
     @Override
     public int getItemCount() {
-        return movies.size();
+        if(!MovieUtils.FAVORITE_FLAG) return movies.size();
+        if(mDataValid && mCursor !=null){
+            return mCursor.getCount();
+        }
+        return 0;
+    }
+
+    @Override
+    public void setHasStableIds(boolean hasStableIds){
+        if(MovieUtils.FAVORITE_FLAG){
+            super.setHasStableIds(true);
+        }else {
+            super.setHasStableIds(false);
+        }
+    }
+
+    @Override
+    public long getItemId(int position){
+        if(!MovieUtils.FAVORITE_FLAG) return -1;
+        if(mDataValid && mCursor != null && mCursor.moveToPosition(position)){
+            return mCursor.getLong(mRowIdColumn);
+        }
+        return 0;
+    }
+
+    public void changeCursor(Cursor cursor) {
+        Cursor old = swapCursor(cursor);
+        if (old != null) {
+            old.close();
+        }
+    }
+
+    public Cursor swapCursor(Cursor newCursor) {
+        if (newCursor == mCursor) {
+            return null;
+        }
+        final Cursor oldCursor = mCursor;
+        if (oldCursor != null && mDataSetObserver != null) {
+            oldCursor.unregisterDataSetObserver(mDataSetObserver);
+        }
+        mCursor = newCursor;
+        if (mCursor != null) {
+            if (mDataSetObserver != null) {
+                mCursor.registerDataSetObserver(mDataSetObserver);
+            }
+            mRowIdColumn = newCursor.getColumnIndexOrThrow("_id");
+            mDataValid = true;
+            notifyDataSetChanged();
+        } else {
+            mRowIdColumn = -1;
+            mDataValid = false;
+            notifyDataSetChanged();
+            //There is no notifyDataSetInvalidated() method in RecyclerView.Adapter
+        }
+        return oldCursor;
+    }
+
+    private class NotifyingDataSetObserver extends DataSetObserver {
+        @Override
+        public void onChanged() {
+            super.onChanged();
+            mDataValid = true;
+            notifyDataSetChanged();
+        }
+
+        @Override
+        public void onInvalidated() {
+            super.onInvalidated();
+            mDataValid = false;
+            notifyDataSetChanged();
+            //There is no notifyDataSetInvalidated() method in RecyclerView.Adapter
+        }
     }
 
 }

@@ -1,25 +1,33 @@
 package com.technobells.rohit.movieexplorer;
 
+import android.database.Cursor;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.technobells.rohit.movieexplorer.adapter.MovieDetailAdapter;
-import com.technobells.rohit.movieexplorer.entity.Cast;
-import com.technobells.rohit.movieexplorer.entity.JsonRequestDiscoverMovieResult;
-import com.technobells.rohit.movieexplorer.entity.JsonRequestMovieCreditsResult;
-import com.technobells.rohit.movieexplorer.entity.JsonRequestMovieReviewResult;
-import com.technobells.rohit.movieexplorer.entity.JsonRequestMovieVideoResult;
-import com.technobells.rohit.movieexplorer.entity.Movie;
-import com.technobells.rohit.movieexplorer.entity.Review;
-import com.technobells.rohit.movieexplorer.entity.SectionDataModel;
-import com.technobells.rohit.movieexplorer.entity.Video;
+import com.technobells.rohit.movieexplorer.data.FavoriteMoviesContract;
+import com.technobells.rohit.movieexplorer.model.Cast;
+import com.technobells.rohit.movieexplorer.model.JsonRequestDiscoverMovieResult;
+import com.technobells.rohit.movieexplorer.model.JsonRequestMovieCreditsResult;
+import com.technobells.rohit.movieexplorer.model.JsonRequestMovieReviewResult;
+import com.technobells.rohit.movieexplorer.model.JsonRequestMovieVideoResult;
+import com.technobells.rohit.movieexplorer.model.Movie;
+import com.technobells.rohit.movieexplorer.model.Review;
+import com.technobells.rohit.movieexplorer.model.SectionDataModel;
+import com.technobells.rohit.movieexplorer.model.Video;
 import com.technobells.rohit.movieexplorer.utilities.MovieApiService;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 
@@ -36,7 +44,7 @@ import retrofit.Retrofit;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MovieDetailActivityFragment extends Fragment {
+public class MovieDetailActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
     private final String LOG_TAG = MovieDetailActivityFragment.class.getSimpleName();
 
     private MovieDetailAdapter mAdapter;
@@ -47,6 +55,11 @@ public class MovieDetailActivityFragment extends Fragment {
     private ArrayList<Review> reviews = new ArrayList<>();
     private ArrayList<Cast> casts = new ArrayList<>();
     private ArrayList<Movie> similarMovies = new ArrayList<>();
+    private long movieId;
+    private final int MOVIE_LOADER =0;
+    private final int VIDEO_LOADER =1;
+    private final int REVIEW_LOADER = 2;
+
 
     private final String SAVED_MOVIE_ITEM = "movieItem";
     private final String SAVED_VIDEO_LIST = "videos";
@@ -67,6 +80,7 @@ public class MovieDetailActivityFragment extends Fragment {
         fetchReviews();
         fetchSimilarMovies();
     }
+
 
     private void fetchVideos(){
         MovieApiService moviesApiService = MovieUtils.retrofitInstance.create(MovieApiService.class);
@@ -236,37 +250,122 @@ public class MovieDetailActivityFragment extends Fragment {
     }
 
     @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle arg){
+
+        switch (id){
+            case MOVIE_LOADER:
+                return new CursorLoader(
+                        getActivity(),
+                        FavoriteMoviesContract.MovieEntry.CONTENT_URI,
+                        MovieUtils.MOVIE_COLUMN,
+                        FavoriteMoviesContract.MovieEntry.COLUMN_TMDB_MOVIE_ID+" = ? ",
+                        new String[]{Long.toString(movie.getId())},
+                        null
+                );
+
+
+            case VIDEO_LOADER:
+                return new CursorLoader(
+                        getActivity(),
+                        FavoriteMoviesContract.VideoEntry.buildVideoMovieUri(movie.getId()),
+                        MovieUtils.VIDEO_COLUMN,
+                        null,
+                        null,
+                        null
+                );
+            case REVIEW_LOADER:
+                return new CursorLoader(
+                        getActivity(),
+                        FavoriteMoviesContract.ReviewEntry.buildReviewMovieUri(movie.getId()),
+                        MovieUtils.REVIEW_COLUMN,
+                        null,
+                        null,
+                        null
+                );
+        }
+        return null;
+
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        switch (loader.getId()){
+            case MOVIE_LOADER:
+                //mAdapter.setExtra(data,MovieUtils.MOVIE_DETAIL);
+                mAdapter.changeCursor(data);
+                break;
+            case VIDEO_LOADER:
+                //mAdapter.setExtra(data,MovieUtils.VIDEO);
+                mAdapter.changeCursor(data);
+                break;
+            case REVIEW_LOADER:
+                //mAdapter.setExtra(data,MovieUtils.REVIEW);
+                mAdapter.changeCursor(data);
+                break;
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {}
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        if(MovieUtils.FAVORITE_FLAG){
+            Log.i(LOG_TAG,"Inside onActivityCreated(), Setting up the loaders");
+
+            getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+            getLoaderManager().initLoader(VIDEO_LOADER, null, this);
+            getLoaderManager().initLoader(REVIEW_LOADER, null, this);
+        }
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu,MenuInflater inflater){
+        inflater.inflate(R.menu.menu_movie_detail,menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        int id = item.getItemId();
+        switch (id){
+            case R.id.menu_item_favorite:{
+                addMovieDetailToDatabase();
+                break;
+            }
+            case R.id.action_settings:
+                return true;
+
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_movie_detail, container, false);
-        movie = getActivity().getIntent().getParcelableExtra("movieTag");
-
-        mAdapter = new MovieDetailAdapter(getActivity());
         ButterKnife.bind(this,rootView);
+        mAdapter = new MovieDetailAdapter(getActivity());
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(mAdapter);
-//        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-//            @Override
-//            public void onRefresh() {
-//                Log.i(LOG_TAG,"Refreshing");
-//                videos.clear();
-//                reviews.clear();
-//                casts.clear();
-//                similarMovies.clear();
-//                mAdapter.clear();
-//                updateMovieDetailView();
-//            }
-//        });
-
-        if(savedInstanceState==null
-                || ! savedInstanceState.containsKey(SAVED_VIDEO_LIST)
-                || ! savedInstanceState.containsKey(SAVED_REVIEW_LIST)  ){
-            updateMovieDetailView();
-        }else{
-            Log.i(LOG_TAG,"Retaining from Saved instances ");
-            videos = savedInstanceState.getParcelableArrayList(SAVED_VIDEO_LIST);
-            reviews = savedInstanceState.getParcelableArrayList(SAVED_REVIEW_LIST);
-            configureMovieItemList();
+        movie = getActivity().getIntent().getParcelableExtra("movieTag");
+        if(!MovieUtils.FAVORITE_FLAG){
+            if(savedInstanceState==null
+                    || ! savedInstanceState.containsKey(SAVED_VIDEO_LIST)
+                    || ! savedInstanceState.containsKey(SAVED_REVIEW_LIST)  ){
+                updateMovieDetailView();
+            }else{
+                Log.i(LOG_TAG,"Retaining from Saved instances ");
+                videos = savedInstanceState.getParcelableArrayList(SAVED_VIDEO_LIST);
+                reviews = savedInstanceState.getParcelableArrayList(SAVED_REVIEW_LIST);
+                configureMovieItemList();
+            }
         }
 
         return rootView;
@@ -284,16 +383,31 @@ public class MovieDetailActivityFragment extends Fragment {
         mAdapter.appendObjectList(movieItemList,0);
     }
 
+    /**
+     * Insert Movie and its related Information into the database.
+     */
+    public void addMovieDetailToDatabase(){
+        long movieRowId = MovieUtils.addMovieToFavorite(getContext(),movie);
+        int videoRowInserted = MovieUtils.addVideosRelatedToMovie(getContext(),movieRowId,videos);
+        int reviewRowInserted = MovieUtils.addReviewsRelatedToMovie(getContext(),movieRowId,reviews);
+        Log.i(LOG_TAG,"Movie Inserted with rowId : " + movieRowId +"\n"+videoRowInserted +" Videos Inserted \n"+ reviewRowInserted + " Reviews Inserted");
+    }
+
+    public void deleteMovieDetailsFromDatabase(){
+        long movieRowId = MovieUtils.getMovieRowFromDatabase(getContext(),movie.getId());
+        int movieRowsDeleted = MovieUtils.deleteMovieFromFavorite(getContext(),movieRowId);
+        int videoRowsDeleted = MovieUtils.deleteVideosFromDatabase(getContext(),movieRowId);
+        int reviewRowsDeleted = MovieUtils.deleteReviewsFromDatabase(getContext(),movieRowId);
+        Log.i(LOG_TAG,movieRowsDeleted +" Movie rows deleted\n"+videoRowsDeleted+ " Video rows deleted\n"+reviewRowsDeleted+ " Review rows Deleted");
+    }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         Log.i(LOG_TAG,"Saving instances before destroying the activity");
-        //check if movieOldClassArrayList is not empty,in this way we don't get null pointer exception when activity is recreated
         if(videos !=null && reviews != null){
             outState.putParcelableArrayList(SAVED_VIDEO_LIST,videos);
             outState.putParcelableArrayList(SAVED_REVIEW_LIST,reviews);
         }
-
     }
 }

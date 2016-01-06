@@ -1,7 +1,13 @@
 package com.technobells.rohit.movieexplorer;
 
+import android.database.Cursor;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
@@ -14,12 +20,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.Toast;
 
 import com.technobells.rohit.movieexplorer.adapter.MovieAdapter;
-import com.technobells.rohit.movieexplorer.entity.JsonRequestDiscoverMovieResult;
-import com.technobells.rohit.movieexplorer.entity.Movie;
+import com.technobells.rohit.movieexplorer.data.FavoriteMoviesContract;
+import com.technobells.rohit.movieexplorer.model.JsonRequestDiscoverMovieResult;
+import com.technobells.rohit.movieexplorer.model.Movie;
 import com.technobells.rohit.movieexplorer.utilities.MovieApiService;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 
@@ -37,17 +43,19 @@ import retrofit.Retrofit;
  * A placeholder fragment containing a simple view.
  */
 public class
-MainActivityFragment extends Fragment {
+MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
+
     public static boolean load = true;
     private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
-    private Boolean FAVORITE_FLAG = false;
     private String SAVED_MOVIE_LIST = "savedMovieList";
     private String SAVED_SORT_PREF = "savedSortPref";
     private String SAVED_PAGE_NO = "page";
-    private int MOVIE_LOADER = 0;
+    private final int MOVIE_LOADER = 0;
+    private boolean favroriteClicked = false;
     private MovieAdapter movieAdapter;
     private ArrayList<Movie> movieArrayList= new ArrayList<>();
     private String sortBy="popularity.desc"; //Default sorting order
+    private String sortOrder = FavoriteMoviesContract.MovieEntry.COLUMN_POPULARITY + " DESC ";// for database sorting.
     private int page = 1;
 
     @Bind(R.id.fragmen_main_grid_recycler_view)
@@ -131,7 +139,9 @@ MainActivityFragment extends Fragment {
             @Override
             public void onRefresh() {
                 page =1;
+                movieAdapter.clear();
                 updateMoviePoster();
+
             }
         });
 
@@ -180,6 +190,8 @@ MainActivityFragment extends Fragment {
             page = savedInstanceState.getInt(SAVED_PAGE_NO);
         }
 
+
+
         return rootView;
     }
 
@@ -208,32 +220,43 @@ MainActivityFragment extends Fragment {
 
         switch(id){
            case R.id.menu_item_favorite:
-//                if( !FAVORITE_FLAG ){
-//                    FAVORITE_FLAG = true;
-//                    showFavoriteMovies();
-//                } else{
-//                    FAVORITE_FLAG = false;
-//                    showAllMovies();
-//                }
+                favroriteClicked = true;
+                if( !MovieUtils.FAVORITE_FLAG ){
+                    MovieUtils.FAVORITE_FLAG = true;
+                    showFavoriteMovies();
+                } else{
+                    MovieUtils.FAVORITE_FLAG = false;
+                    showAllMovies();
+                }
                 return true;
 
             case R.id.action_sort_by_popularity:
                 if(sortBy.equals(sortByRating)){
                     sortBy=sortByPopularity;
-                    page =1;
-                    movieArrayList.clear();
-                    movieAdapter.clear();
-                    updateMoviePoster();
+                    if(MovieUtils.FAVORITE_FLAG){
+                        sortOrder = FavoriteMoviesContract.MovieEntry.COLUMN_POPULARITY + " DESC ";
+                        getLoaderManager().restartLoader(MOVIE_LOADER,null,this);
+                    }else {
+                        page = 1;
+                        movieArrayList.clear();
+                        movieAdapter.clear();
+                        updateMoviePoster();
+                    }
                 }
                 return true;
 
             case R.id.action_sort_by_rating:
                 if(sortBy.equals(sortByPopularity)) {
                     sortBy=sortByRating;
-                    page =1;
-                    movieArrayList.clear();
-                    movieAdapter.clear();
-                    updateMoviePoster();
+                    if(MovieUtils.FAVORITE_FLAG){
+                        sortOrder = FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_AVERAGE + " DESC ";
+                        getLoaderManager().restartLoader(MOVIE_LOADER,null,this);
+                    }else {
+                        page = 1;
+                        movieArrayList.clear();
+                        movieAdapter.clear();
+                        updateMoviePoster();
+                    }
                 }
                 return true;
 
@@ -241,6 +264,48 @@ MainActivityFragment extends Fragment {
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    public void showFavoriteMovies(){
+        if(!favroriteClicked)getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+        getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
+    }
+
+    public void showAllMovies(){
+        movieAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle arg){
+        switch (id){
+            case MOVIE_LOADER:
+
+
+                return new CursorLoader(
+                        getActivity(),
+                        FavoriteMoviesContract.MovieEntry.CONTENT_URI,
+                        MovieUtils.MOVIE_COLUMN,
+                        null,
+                        null,
+                        sortOrder
+                );
+
+
+        }
+        return null;
+
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        switch (loader.getId()){
+            case MOVIE_LOADER:
+                movieAdapter.changeCursor(data);
+                break;
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {}
 
     @Override
     public void onSaveInstanceState(Bundle saveState){
