@@ -14,12 +14,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.Toast;
 
 import com.technobells.rohit.movieexplorer.adapter.MovieAdapter;
-import com.technobells.rohit.movieexplorer.entity.JsonRequestDiscoverMovieResult;
-import com.technobells.rohit.movieexplorer.entity.Movie;
+import com.technobells.rohit.movieexplorer.model.JsonRequestDiscoverMovieResult;
+import com.technobells.rohit.movieexplorer.model.Movie;
 import com.technobells.rohit.movieexplorer.utilities.MovieApiService;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 

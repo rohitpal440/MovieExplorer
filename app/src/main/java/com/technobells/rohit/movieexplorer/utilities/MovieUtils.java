@@ -2,10 +2,9 @@ package com.technobells.rohit.movieexplorer.utilities;
 
 import android.util.Log;
 
-import com.google.android.youtube.player.YouTubeApiServiceUtil;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.logging.HttpLoggingInterceptor;
-import com.technobells.rohit.movieexplorer.entity.Review;
+import com.technobells.rohit.movieexplorer.model.Review;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

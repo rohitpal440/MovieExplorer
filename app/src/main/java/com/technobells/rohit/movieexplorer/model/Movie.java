@@ -1,4 +1,4 @@
-package com.technobells.rohit.movieexplorer.entity;
+package com.technobells.rohit.movieexplorer.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;

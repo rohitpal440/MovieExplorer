@@ -2,7 +2,6 @@ package com.technobells.rohit.movieexplorer;
 
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -11,15 +10,15 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.technobells.rohit.movieexplorer.adapter.MovieDetailAdapter;
-import com.technobells.rohit.movieexplorer.entity.Cast;
-import com.technobells.rohit.movieexplorer.entity.JsonRequestDiscoverMovieResult;
-import com.technobells.rohit.movieexplorer.entity.JsonRequestMovieCreditsResult;
-import com.technobells.rohit.movieexplorer.entity.JsonRequestMovieReviewResult;
-import com.technobells.rohit.movieexplorer.entity.JsonRequestMovieVideoResult;
-import com.technobells.rohit.movieexplorer.entity.Movie;
-import com.technobells.rohit.movieexplorer.entity.Review;
-import com.technobells.rohit.movieexplorer.entity.SectionDataModel;
-import com.technobells.rohit.movieexplorer.entity.Video;
+import com.technobells.rohit.movieexplorer.model.Cast;
+import com.technobells.rohit.movieexplorer.model.JsonRequestDiscoverMovieResult;
+import com.technobells.rohit.movieexplorer.model.JsonRequestMovieCreditsResult;
+import com.technobells.rohit.movieexplorer.model.JsonRequestMovieReviewResult;
+import com.technobells.rohit.movieexplorer.model.JsonRequestMovieVideoResult;
+import com.technobells.rohit.movieexplorer.model.Movie;
+import com.technobells.rohit.movieexplorer.model.Review;
+import com.technobells.rohit.movieexplorer.model.SectionDataModel;
+import com.technobells.rohit.movieexplorer.model.Video;
 import com.technobells.rohit.movieexplorer.utilities.MovieApiService;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 

@@ -19,10 +19,10 @@ import com.google.android.youtube.player.YouTubeStandalonePlayer;
 import com.squareup.picasso.Picasso;
 import com.technobells.rohit.movieexplorer.BuildConfig;
 import com.technobells.rohit.movieexplorer.R;
-import com.technobells.rohit.movieexplorer.entity.SectionDataModel;
-import com.technobells.rohit.movieexplorer.entity.Movie;
-import com.technobells.rohit.movieexplorer.entity.Review;
-import com.technobells.rohit.movieexplorer.entity.Video;
+import com.technobells.rohit.movieexplorer.model.SectionDataModel;
+import com.technobells.rohit.movieexplorer.model.Movie;
+import com.technobells.rohit.movieexplorer.model.Review;
+import com.technobells.rohit.movieexplorer.model.Video;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 
 import java.util.ArrayList;
@@ -36,11 +36,11 @@ import butterknife.ButterKnife;
 public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
 
     private final String LOG_TAG = MovieAdapter.class.getSimpleName();
-    private static final int MOVIE_DETAIL = 0 ;
-    private static final int VIDEO = 1;
-    private static final int REVIEW = 3;
+    private static final int MOVIE_DETAIL = 10 ;
+    private static final int VIDEO = 9;
+    private static final int REVIEW = 6;
     private static final int HEADER = 5 ;
-    private static final int RECYCLER_VIEW = 6;
+    private static final int RECYCLER_VIEW = 7;
     private ArrayList<Object> movieItems;
     private Context mContext;
     private Activity mActivity;

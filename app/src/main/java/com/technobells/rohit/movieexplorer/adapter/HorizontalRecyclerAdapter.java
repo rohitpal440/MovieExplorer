@@ -11,8 +11,8 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 import com.technobells.rohit.movieexplorer.R;
-import com.technobells.rohit.movieexplorer.entity.Cast;
-import com.technobells.rohit.movieexplorer.entity.Movie;
+import com.technobells.rohit.movieexplorer.model.Cast;
+import com.technobells.rohit.movieexplorer.model.Movie;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 
 import java.util.ArrayList;

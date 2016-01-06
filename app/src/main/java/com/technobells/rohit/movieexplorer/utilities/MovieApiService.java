@@ -1,9 +1,9 @@
 package com.technobells.rohit.movieexplorer.utilities;
 
-import com.technobells.rohit.movieexplorer.entity.JsonRequestDiscoverMovieResult;
-import com.technobells.rohit.movieexplorer.entity.JsonRequestMovieCreditsResult;
-import com.technobells.rohit.movieexplorer.entity.JsonRequestMovieReviewResult;
-import com.technobells.rohit.movieexplorer.entity.JsonRequestMovieVideoResult;
+import com.technobells.rohit.movieexplorer.model.JsonRequestDiscoverMovieResult;
+import com.technobells.rohit.movieexplorer.model.JsonRequestMovieCreditsResult;
+import com.technobells.rohit.movieexplorer.model.JsonRequestMovieReviewResult;
+import com.technobells.rohit.movieexplorer.model.JsonRequestMovieVideoResult;
 
 import retrofit.Call;
 import retrofit.http.GET;

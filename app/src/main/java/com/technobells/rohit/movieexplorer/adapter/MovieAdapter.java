@@ -11,12 +11,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.squareup.picasso.Picasso;
 import com.technobells.rohit.movieexplorer.utilities.ItemClickListener;
 import com.technobells.rohit.movieexplorer.MovieDetailActivity;
 import com.technobells.rohit.movieexplorer.R;
-import com.technobells.rohit.movieexplorer.entity.Movie;
+import com.technobells.rohit.movieexplorer.model.Movie;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 
 import java.util.ArrayList;
