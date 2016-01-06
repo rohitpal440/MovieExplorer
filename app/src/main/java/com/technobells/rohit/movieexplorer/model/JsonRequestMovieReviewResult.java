@@ -1,4 +1,4 @@
-package com.technobells.rohit.movieexplorer.entity;
+package com.technobells.rohit.movieexplorer.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

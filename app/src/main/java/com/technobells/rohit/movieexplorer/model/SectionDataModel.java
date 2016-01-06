@@ -1,4 +1,4 @@
-package com.technobells.rohit.movieexplorer.entity;
+package com.technobells.rohit.movieexplorer.model;
 
 import java.util.ArrayList;
 
