@@ -75,6 +75,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
          */
         DisplayMetrics metrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        MovieUtils.SCREEN_DENSITY = metrics.density;
         int columnCount = (metrics.widthPixels/(int)getResources().getDimension(R.dimen.movie_card_width_in_grid));
         final GridLayoutManager gridLayoutManager =
                 new GridLayoutManager(getContext(),columnCount>2?columnCount:2);

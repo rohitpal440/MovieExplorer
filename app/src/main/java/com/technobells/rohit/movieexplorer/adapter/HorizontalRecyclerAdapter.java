@@ -173,23 +173,40 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
         Cast cast = (Cast) itemsConnectedtoMovie.get(pos);
         holder.name.setText(cast.getName());
         holder.character.setText(cast.getCharacter());
-        holder.poster.setAdjustViewBounds(true);
+
         holder.pos = pos;
         holder.context = mContext;
-        Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE+"w185/"+ cast.getProfilePath()).
-                placeholder(R.drawable.placeholder).into(holder.poster);
+        if(MovieUtils.SCREEN_DENSITY > 1.0) {
+            Log.i(LOG_TAG,"Screen Density is :" + MovieUtils.SCREEN_DENSITY);
+            holder.poster.setAdjustViewBounds(true);
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE+"w184/"+ cast.getProfilePath()).
+                    placeholder(R.drawable.placeholder)
+                    .fit().into(holder.poster);
+        }else {
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE+"w154/"+ cast.getProfilePath()).
+                    placeholder(R.drawable.placeholder)
+                    .fit().into(holder.poster);
+        }
     }
 
     public void configureSimilarMovieViewHolder(SimilarMovieViewHolder holder,int pos){
         Movie movie = (Movie) itemsConnectedtoMovie.get(pos);
         holder.rating.setText(String.format("%.1f",movie.getVoteAverage()));
         holder.releaseDate.setText(MovieUtils.formateDate(movie.getReleaseDate(),"yyyy-MM-dd","yyyy"));
-        holder.poster.setAdjustViewBounds(true);
+
         holder.context = mContext;
         holder.pos = pos;
         holder.movie = movie;
-        Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE +"w185/"+movie.getPosterPath())
-                .placeholder(R.drawable.placeholder).into(holder.poster);
+        if(MovieUtils.SCREEN_DENSITY > 1.0){
+            holder.poster.setAdjustViewBounds(true);
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE +"w185/"+movie.getPosterPath())
+                    .placeholder(R.drawable.placeholder)
+                    .fit()
+                    .into(holder.poster);
+        }else {
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE +"w154/"+movie.getPosterPath())
+                    .placeholder(R.drawable.placeholder).into(holder.poster);
+        }
     }
 
 }

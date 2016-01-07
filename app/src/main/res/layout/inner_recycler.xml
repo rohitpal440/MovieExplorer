@@ -18,7 +18,7 @@
         android:id="@+id/inner_recycler_view"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/column_height"
-        android:padding="@dimen/activity_horizontal_margin"
+        android:layout_gravity="center_vertical|center_horizontal"
         android:clipToPadding="true"
         android:orientation ="vertical"
         />

@@ -33,7 +33,7 @@ public class MovieUtils {
     public static final String BASE_URL_IMAGE= "http://image.tmdb.org/t/p/";
     public static final String BASE_URL_VIDEO_THUMBNAIL = "http://img.youtube.com/vi/";
     public static final String MIN_VOTE_COUNT = "1000";
-
+    public static float SCREEN_DENSITY =1;
     public static boolean FAVORITE_FLAG = false;
 
     public static final int MOVIE_DETAIL = 10 ;//Don't change the values as they represent the no. of column in cursor

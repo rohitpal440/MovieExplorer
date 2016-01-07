@@ -501,7 +501,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             videoShareAction.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    System.out.println("You have Just Clicked on Share button");
                     Intent intent = new Intent(Intent.ACTION_SEND);
                     intent.putExtra(Intent.EXTRA_TEXT,"Hi, Check this new "+type.getText().toString()+" of "+ movieName +" \n "+ Uri.parse("http://www.youtube.com/watch?v="+videoId));
                     intent.setType("text/plain");
@@ -592,12 +591,12 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         //final String SIZE="w185/";
         holder.posterImage.setAdjustViewBounds(true);
         if(MovieUtils.FAVORITE_FLAG){
-            Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getPosterPath())).placeholder(R.drawable.placeholder).into(holder.posterImage);
+            Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getPosterPath())).fit().placeholder(R.drawable.placeholder).into(holder.posterImage);
             Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getBackdropPath())).placeholder(R.drawable.loading_placeholder).into(holder.backDropPoster);
 
         }else {
-            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w185/" + movie.getPosterPath()).placeholder(R.drawable.placeholder).into(holder.posterImage);
-            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w500/"+ movie.getBackdropPath()).placeholder(R.drawable.loading_placeholder).into(holder.backDropPoster);
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w185/" + movie.getPosterPath()).placeholder(R.drawable.placeholder).fit().into(holder.posterImage);
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w500/"+ movie.getBackdropPath()).placeholder(R.drawable.loading_placeholder).fit().into(holder.backDropPoster);
         }
 
         holder.title.setText(movie.getTitle());
