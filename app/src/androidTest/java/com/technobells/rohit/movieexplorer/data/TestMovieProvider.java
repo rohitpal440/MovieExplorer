@@ -521,11 +521,11 @@ public class TestMovieProvider  extends AndroidTestCase {
     public void testDeleteRecords() {
         testInsertReadProvider();
 
-        // Register a content observer for our location delete.
+        // Register a content observer for our Movie delete.
         TestUtilities.TestContentObserver movieObserver = TestUtilities.getTestContentObserver();
         mContext.getContentResolver().registerContentObserver(FavoriteMoviesContract.MovieEntry.CONTENT_URI, true, movieObserver);
 
-        // Register a content observer for our weather delete.
+        // Register a content observer for our Review delete.
         TestUtilities.TestContentObserver reviewObserver = TestUtilities.getTestContentObserver();
         mContext.getContentResolver().registerContentObserver(FavoriteMoviesContract.ReviewEntry.CONTENT_URI, true, reviewObserver);
 

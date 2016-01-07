@@ -25,7 +25,7 @@ public class FavoriteMoviesContract {
 
         //Table
         public static final String TABLE_NAME = "movie";
-        public static final String COLUMN_TMDB_MOVIE_ID = "tmdb_id";
+        public static final String COLUMN_TMDB_MOVIE_ID = "movie_tmdb_id";
         public static final String COLUMN_TITLE ="title";
         public static final String COLUMN_RELEASE_DATE = "release_date";
         public static final String COLUMN_POPULARITY = "popularity";
@@ -55,7 +55,7 @@ public class FavoriteMoviesContract {
 
         //Table
         public static final String TABLE_NAME = "review";
-        public static final String COLUMN_TMDB_REVIEW_ID = "tmdb_id";
+        public static final String COLUMN_TMDB_REVIEW_ID = "review_tmdb_id";
         public static final String COLUMN_MOVIE_ID = "movie_id";
         public static final String COLUMN_AUTHOR = "author";
         public static final String COLUMN_CONTENT = "content";
@@ -65,12 +65,12 @@ public class FavoriteMoviesContract {
             return ContentUris.withAppendedId(CONTENT_URI,id);
         }
 
-        public static Uri buildReviewMovieUri(int tmdbMovieId){
-            return CONTENT_URI.buildUpon().appendPath(Integer.toString(tmdbMovieId)).build();
+        public static Uri buildReviewMovieUri(long tmdbMovieId){
+            return CONTENT_URI.buildUpon().appendPath(Long.toString(tmdbMovieId)).build();
         }
 
-        public static Uri buildReviewMovieUriWithReviewId(int tmdbMovieId,String tmdbRevieId){
-            return CONTENT_URI.buildUpon().appendPath(Integer.toString(tmdbMovieId))
+        public static Uri buildReviewMovieUriWithReviewId(long tmdbMovieId,String tmdbRevieId){
+            return CONTENT_URI.buildUpon().appendPath(Long.toString(tmdbMovieId))
                     .appendQueryParameter(COLUMN_TMDB_REVIEW_ID,tmdbRevieId)
                     .build();
         }
@@ -91,7 +91,7 @@ public class FavoriteMoviesContract {
 
         //Table
         public static final String TABLE_NAME = "video";
-        public static final String COLUMN_TMDB_VIDEO_ID = "tmdb_id";
+        public static final String COLUMN_TMDB_VIDEO_ID = "video_tmdb_id";
         public static final String COLUMN_MOVIE_ID = "movie_id";
         public static final String COLUMN_LANG = "language";
         public static final String COLUMN_KEY = "key";
@@ -104,13 +104,13 @@ public class FavoriteMoviesContract {
             return ContentUris.withAppendedId(CONTENT_URI,id);
         }
 
-        public static Uri buildVideoMovieUri(int tmdbMovieId){
-            return CONTENT_URI.buildUpon().appendPath(Integer.toString(tmdbMovieId)).build();
+        public static Uri buildVideoMovieUri(long tmdbMovieId){
+            return CONTENT_URI.buildUpon().appendPath(Long.toString(tmdbMovieId)).build();
         }
 
         public static Uri buildVideoMovieUriWithVideoId(
-                int tmdbMovieId,String tmdbVideoId){
-            return CONTENT_URI.buildUpon().appendPath(Integer.toString(tmdbMovieId))
+                long tmdbMovieId,String tmdbVideoId){
+            return CONTENT_URI.buildUpon().appendPath(Long.toString(tmdbMovieId))
                     .appendQueryParameter(COLUMN_TMDB_VIDEO_ID,tmdbVideoId)
                     .build();
         }

@@ -1,15 +1,30 @@
 package com.technobells.rohit.movieexplorer;
 
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 import com.technobells.rohit.movieexplorer.adapter.MovieDetailAdapter;
+
+import com.technobells.rohit.movieexplorer.data.FavoriteMoviesContract;
 import com.technobells.rohit.movieexplorer.model.Cast;
 import com.technobells.rohit.movieexplorer.model.JsonRequestDiscoverMovieResult;
 import com.technobells.rohit.movieexplorer.model.JsonRequestMovieCreditsResult;
@@ -22,6 +37,8 @@ import com.technobells.rohit.movieexplorer.model.Video;
 import com.technobells.rohit.movieexplorer.utilities.MovieApiService;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -35,7 +52,7 @@ import retrofit.Retrofit;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MovieDetailActivityFragment extends Fragment {
+public class MovieDetailActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
     private final String LOG_TAG = MovieDetailActivityFragment.class.getSimpleName();
 
     private MovieDetailAdapter mAdapter;
@@ -46,19 +63,23 @@ public class MovieDetailActivityFragment extends Fragment {
     private ArrayList<Review> reviews = new ArrayList<>();
     private ArrayList<Cast> casts = new ArrayList<>();
     private ArrayList<Movie> similarMovies = new ArrayList<>();
+    private long movieId;
+    private final int MOVIE_LOADER =0;
+    private final int VIDEO_LOADER =1;
+    private final int REVIEW_LOADER = 2;
 
     private final String SAVED_MOVIE_ITEM = "movieItem";
     private final String SAVED_VIDEO_LIST = "videos";
     private final String SAVED_REVIEW_LIST = "reviews";
+    private final String SAVED_CAST_LIST = "casts";
+    private final String SAVED_SIMILAR_MOVIES_LIST = "similarMovies";
+
     @Bind(R.id.fragment_movie_detail_recycler_view)
     RecyclerView recyclerView;
 
-    int progress =0;
-    public MovieDetailActivityFragment() {
-    }
+    public MovieDetailActivityFragment() {}
 
     private void updateMovieDetailView() {
-        Log.i(LOG_TAG, "Fetching the Related data>>>>>>>>>");
         Object temp = movie;
         mAdapter.appendObject(temp,0);
         fetchVideos();
@@ -235,37 +256,124 @@ public class MovieDetailActivityFragment extends Fragment {
     }
 
     @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle arg){
+
+        switch (id){
+            case MOVIE_LOADER:
+                return new CursorLoader(
+                        getActivity(),
+                        FavoriteMoviesContract.MovieEntry.CONTENT_URI,
+                        MovieUtils.MOVIE_COLUMN,
+                        FavoriteMoviesContract.MovieEntry.COLUMN_TMDB_MOVIE_ID+" = ? ",
+                        new String[]{Long.toString(movie.getId())},
+                        null
+                );
+
+
+            case VIDEO_LOADER:
+                return new CursorLoader(
+                        getActivity(),
+                        FavoriteMoviesContract.VideoEntry.buildVideoMovieUri(movie.getId()),
+                        MovieUtils.VIDEO_COLUMN,
+                        null,
+                        null,
+                        null
+                );
+            case REVIEW_LOADER:
+                return new CursorLoader(
+                        getActivity(),
+                        FavoriteMoviesContract.ReviewEntry.buildReviewMovieUri(movie.getId()),
+                        MovieUtils.REVIEW_COLUMN,
+                        null,
+                        null,
+                        null
+                );
+        }
+        return null;
+
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        switch (loader.getId()){
+            case MOVIE_LOADER:
+                //mAdapter.setExtra(data,MovieUtils.MOVIE_DETAIL);
+                mAdapter.changeCursor(data);
+                break;
+            case VIDEO_LOADER:
+                //mAdapter.setExtra(data,MovieUtils.VIDEO);
+                mAdapter.changeCursor(data);
+                break;
+            case REVIEW_LOADER:
+                //mAdapter.setExtra(data,MovieUtils.REVIEW);
+                mAdapter.changeCursor(data);
+                break;
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {}
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        if(MovieUtils.FAVORITE_FLAG){
+            Log.i(LOG_TAG,"Inside onActivityCreated(), Setting up the loaders");
+
+            getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+            getLoaderManager().initLoader(VIDEO_LOADER, null, this);
+            getLoaderManager().initLoader(REVIEW_LOADER, null, this);
+        }
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu,MenuInflater inflater){
+        inflater.inflate(R.menu.menu_movie_detail,menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        int id = item.getItemId();
+        switch (id){
+            case R.id.menu_item_favorite:{
+                addMovieDetailToDatabase();
+                break;
+            }
+            case R.id.action_settings:
+                return true;
+
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_movie_detail, container, false);
-        movie = getActivity().getIntent().getParcelableExtra("movieTag");
-
-        mAdapter = new MovieDetailAdapter(getActivity());
         ButterKnife.bind(this,rootView);
+        mAdapter = new MovieDetailAdapter(getActivity());
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(mAdapter);
-//        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-//            @Override
-//            public void onRefresh() {
-//                Log.i(LOG_TAG,"Refreshing");
-//                videos.clear();
-//                reviews.clear();
-//                casts.clear();
-//                similarMovies.clear();
-//                mAdapter.clear();
-//                updateMovieDetailView();
-//            }
-//        });
-
-        if(savedInstanceState==null
-                || ! savedInstanceState.containsKey(SAVED_VIDEO_LIST)
-                || ! savedInstanceState.containsKey(SAVED_REVIEW_LIST)  ){
-            updateMovieDetailView();
-        }else{
-            Log.i(LOG_TAG,"Retaining from Saved instances ");
-            videos = savedInstanceState.getParcelableArrayList(SAVED_VIDEO_LIST);
-            reviews = savedInstanceState.getParcelableArrayList(SAVED_REVIEW_LIST);
-            configureMovieItemList();
+        movie = getActivity().getIntent().getParcelableExtra("movieTag");
+        if(!MovieUtils.FAVORITE_FLAG){
+            if(savedInstanceState==null
+                    || ! savedInstanceState.containsKey(SAVED_VIDEO_LIST)
+                    || ! savedInstanceState.containsKey(SAVED_REVIEW_LIST)  ){
+                updateMovieDetailView();
+            }else{
+                Log.i(LOG_TAG,"Retaining from Saved instances ");
+                videos = savedInstanceState.getParcelableArrayList(SAVED_VIDEO_LIST);
+                reviews = savedInstanceState.getParcelableArrayList(SAVED_REVIEW_LIST);
+                casts = savedInstanceState.getParcelableArrayList(SAVED_CAST_LIST);
+                similarMovies = savedInstanceState.getParcelableArrayList(SAVED_SIMILAR_MOVIES_LIST);
+                configureMovieItemList();
+            }
         }
 
         return rootView;
@@ -273,26 +381,148 @@ public class MovieDetailActivityFragment extends Fragment {
 
     private void configureMovieItemList(){
         Log.i(LOG_TAG,"Configuring with "+videos.size()+" Videos and "+reviews.size() + " reviews ");
+
+        SectionDataModel similarMoviesSection = new SectionDataModel();
+        SectionDataModel castSection = new SectionDataModel();
+
+        similarMoviesSection.setSectionTitle("Similar Movies");
+        similarMoviesSection.setAllItemsInSection(null,similarMovies);
+
+        castSection.setSectionTitle("Star Cast ");
+        castSection.setAllItemsInSection(casts,null);
+
         movieItemList.clear();
         movieItemList.add(movie);
         movieItemList.add("Related Videos");
         movieItemList.addAll(videos);
+        movieItemList.add(castSection);
         movieItemList.add("Reviews");
         movieItemList.addAll(reviews);
+        movieItemList.add(similarMoviesSection);
         mAdapter.clear();
         mAdapter.appendObjectList(movieItemList,0);
     }
 
+    /**
+     * Insert Movie and its related Information into the database.
+     */
+    public void addMovieDetailToDatabase(){
+        long movieRowId = MovieUtils.addMovieToFavorite(getContext(),movie);
+        int videoRowInserted = MovieUtils.addVideosRelatedToMovie(getContext(),movieRowId,videos);
+        int reviewRowInserted = MovieUtils.addReviewsRelatedToMovie(getContext(),movieRowId,reviews);
+        Log.i(LOG_TAG,"Movie Inserted with rowId : " + movieRowId +"\n"+videoRowInserted +" Videos Inserted \n"+ reviewRowInserted + " Reviews Inserted");
+        saveMoviePosters();
+        saveVideoThumbnails();
+        Log.i(LOG_TAG,"Images Related to movie Details are saved");
+    }
+
+    public void saveMoviePosters(){
+        final File folderMoviePoster = new File( getContext().getFilesDir().getPath() + "/moviePoster");
+        if(!folderMoviePoster.exists()){
+            folderMoviePoster.mkdir();
+        }
+        for(int i =0 ;i<2;i++){
+            final int tmp = i;
+            Target target = new Target() {
+                @Override
+                public void onBitmapLoaded(final Bitmap bitmap, Picasso.LoadedFrom from) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            File file = new File(folderMoviePoster + (tmp==1?movie.getBackdropPath():movie.getPosterPath()));
+                            try {
+                                file.createNewFile();
+                                FileOutputStream ostream = new FileOutputStream(file);
+                                //FileOutputStream ostream = getActivity().openFileOutput(file.getPath(),Context.MODE_PRIVATE);
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, ostream);
+                                ostream.close();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+                    }).start();
+                }
+                @Override
+                public void onBitmapFailed(Drawable errorDrawable) {}
+                @Override
+                public void onPrepareLoad(Drawable placeHolderDrawable) {
+                    if (placeHolderDrawable != null) {}
+                }
+            };
+
+           if(i==0){
+               Picasso.with(this.getContext()).load(MovieUtils.BASE_URL_IMAGE + "w185/" + movie.getPosterPath()).into(target);
+           }else {
+               Picasso.with(this.getContext()).load(MovieUtils.BASE_URL_IMAGE + "w500/"+ movie.getBackdropPath()).into(target);
+           }
+
+        }
+    }
+
+    public void saveVideoThumbnails() {
+        final File folderVideoPoster = new File( getContext().getFilesDir().getPath() + "/videoPoster");
+        if(!folderVideoPoster.exists()){
+            folderVideoPoster.mkdir();
+        }
+        for (int i = 0; i < videos.size(); i++) {
+            final int tmp = i;
+            Target target = new Target() {
+                @Override
+                public void onBitmapLoaded(final Bitmap bitmap, Picasso.LoadedFrom from) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            File file = new File(folderVideoPoster +"/"+ (videos.get(tmp).getKey())+".jpg");
+                            try {
+                                file.createNewFile();
+                                FileOutputStream ostream = new FileOutputStream(file);
+                                //FileOutputStream ostream = getActivity().openFileOutput(file.getPath(),Context.MODE_PRIVATE);
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, ostream);
+                                ostream.close();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+                    }).start();
+                }
+
+                @Override
+                public void onBitmapFailed(Drawable errorDrawable) {
+                }
+
+                @Override
+                public void onPrepareLoad(Drawable placeHolderDrawable) {
+                    if (placeHolderDrawable != null) {
+                    }
+                }
+            };
+
+            Picasso.with(this.getContext()).load(MovieUtils.BASE_URL_VIDEO_THUMBNAIL + videos.get(tmp).getKey() + "/hqdefault.jpg").into(target);
+
+        }
+    }
+
+    public void deleteMovieDetailsFromDatabase(){
+        long movieRowId = MovieUtils.getMovieRowFromDatabase(getContext(),movie.getId());
+        int movieRowsDeleted = MovieUtils.deleteMovieFromFavorite(getContext(),movieRowId);
+        int videoRowsDeleted = MovieUtils.deleteVideosFromDatabase(getContext(),movieRowId);
+        int reviewRowsDeleted = MovieUtils.deleteReviewsFromDatabase(getContext(),movieRowId);
+        Log.i(LOG_TAG,movieRowsDeleted +" Movie rows deleted\n"+videoRowsDeleted+ " Video rows deleted\n"+reviewRowsDeleted+ " Review rows Deleted");
+    }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         Log.i(LOG_TAG,"Saving instances before destroying the activity");
-        //check if movieOldClassArrayList is not empty,in this way we don't get null pointer exception when activity is recreated
-        if(videos !=null && reviews != null){
+        if(videos !=null && reviews != null && casts !=null && similarMovies !=null){
             outState.putParcelableArrayList(SAVED_VIDEO_LIST,videos);
             outState.putParcelableArrayList(SAVED_REVIEW_LIST,reviews);
+            outState.putParcelableArrayList(SAVED_CAST_LIST,casts);
+            outState.putParcelableArrayList(SAVED_SIMILAR_MOVIES_LIST,similarMovies);
         }
-
     }
 }

@@ -3,7 +3,12 @@ package com.technobells.rohit.movieexplorer.adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.AbstractCursor;
+import android.database.Cursor;
+import android.database.DataSetObserver;
+import android.database.MergeCursor;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -25,6 +30,7 @@ import com.technobells.rohit.movieexplorer.model.Review;
 import com.technobells.rohit.movieexplorer.model.Video;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import butterknife.Bind;
@@ -34,14 +40,19 @@ import butterknife.ButterKnife;
  * Created by rohit on 31/12/15.
  */
 public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
-
     private final String LOG_TAG = MovieAdapter.class.getSimpleName();
-    private static final int MOVIE_DETAIL = 10 ;
-    private static final int VIDEO = 9;
-    private static final int REVIEW = 6;
-    private static final int HEADER = 5 ;
-    private static final int RECYCLER_VIEW = 7;
     private ArrayList<Object> movieItems;
+
+    private MergeCursor mergeCursor;
+    private Cursor movieCursor;
+    private Cursor videoCursor;
+    private Cursor reviewCursor;
+    private boolean mDataValid;
+    private int mRowIdColumn =0;
+    private DataSetObserver movieDataSetObserver;
+    private DataSetObserver videoDataSetObserver;
+    private DataSetObserver reviewDataSetObserver;
+
     private Context mContext;
     private Activity mActivity;
     private static boolean IS_YOUTUBE_INSTALLED;
@@ -49,7 +60,175 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         this.mContext = activity;
         this.mActivity = activity;
         movieItems = new ArrayList<>();
+        videoCursor = null;
+        movieCursor = null;
+        reviewCursor = null;
         IS_YOUTUBE_INSTALLED = (YouTubeApiServiceUtil.isYouTubeApiServiceAvailable(mContext)== YouTubeInitializationResult.SUCCESS);
+    }
+//
+//    public void setMovieCursor(Cursor movieCursor){
+//        this.movieCursor = movieCursor;
+//        setMovieDataSetObserver();
+//        if(this.movieCursor != null && videoCursor != null) mDataValid =true;
+//        notifyDataSetChanged();
+//    }
+//    public void setVideoCursor(Cursor videoCursor){
+//        this.videoCursor = videoCursor;
+//        setVideoDataSetObserver();
+//        if(this.movieCursor != null && videoCursor != null) mDataValid =true;
+//        notifyDataSetChanged();
+//    }
+//    public void setReviewCursor(Cursor reviewCursor){
+//        this.reviewCursor = reviewCursor;
+//        setReviewDataSetObserver();
+//        notifyDataSetChanged();
+//    }
+    public void setMovieDataSetObserver(){
+        movieDataSetObserver = new NotifyingDataSetObserver();
+        if (movieCursor != null) {
+            movieCursor.registerDataSetObserver(movieDataSetObserver);
+        }
+    }
+
+    public void setVideoDataSetObserver(){
+        videoDataSetObserver = new NotifyingDataSetObserver();
+        if (videoCursor != null) {
+            videoCursor.registerDataSetObserver(videoDataSetObserver);
+        }
+    }
+
+    public void setReviewDataSetObserver(){
+        reviewDataSetObserver = new NotifyingDataSetObserver();
+        if (reviewCursor != null) {
+            reviewCursor.registerDataSetObserver(reviewDataSetObserver);
+        }
+    }
+
+    public int getMovieItemCusorCount(){
+        if(movieCursor == null) return 0;
+        return movieCursor.getCount() + ( videoCursor==null? 0:videoCursor.getCount()) + (reviewCursor==null?0:reviewCursor.getCount());
+    }
+
+    @Override
+    public int getItemCount(){
+        if(MovieUtils.FAVORITE_FLAG){
+            return getMovieItemCusorCount();
+
+        }else {
+            return movieItems.size();
+        }
+    }
+    
+    public int getActualPositionInCursor(int pos){
+        if(pos==0) return 0;
+        else if(pos<= videoCursor.getCount()) return pos -1;
+        else if(pos<= videoCursor.getCount()+ reviewCursor.getCount()) return pos - (videoCursor.getCount() +1);
+        else throw new ArrayIndexOutOfBoundsException(pos);
+    }
+    public void changeCursor(Cursor cursor){
+        Cursor old;
+        //switch (getExtra(cursor)){
+        switch (cursor.getColumnCount()){
+            case MovieUtils.MOVIE_DETAIL:
+                old = swapMovieCursor(cursor);
+                break;
+            case MovieUtils.VIDEO:
+                old = swapVideoCursor(cursor);
+                break;
+            case MovieUtils.REVIEW:
+                old = swapReviewCursor(cursor);
+                break;
+            default:
+                old =null;
+                break;
+        }
+        if(old != null){
+            old.close();
+        }
+    }
+
+    public Cursor swapMovieCursor(Cursor newCursor){
+        if (newCursor == movieCursor) {
+            return null;
+        }
+        final Cursor oldCursor = movieCursor;
+        if (oldCursor != null && movieDataSetObserver != null) {
+            oldCursor.unregisterDataSetObserver(movieDataSetObserver);
+        }
+        movieCursor = newCursor;
+        if (movieCursor != null) {
+            if (movieDataSetObserver != null) {
+                movieCursor.registerDataSetObserver(movieDataSetObserver);
+            }else {
+                setMovieDataSetObserver();
+            }
+           // mRowIdColumn = newCursor.getColumnIndexOrThrow(MovieUtils.MOVIE_COLUMN[MovieUtils.COL_MOVIE_ID]);
+            mRowIdColumn =0;
+            mDataValid = true;
+            notifyDataSetChanged();
+        } else {
+            mRowIdColumn = -1;
+            mDataValid = false;
+            notifyDataSetChanged();
+            //There is no notifyDataSetInvalidated() method in RecyclerView.Adapter
+        }
+        return oldCursor;
+    }
+
+    public Cursor swapVideoCursor(Cursor newCursor){
+        if (newCursor == videoCursor) {
+            return null;
+        }
+        final Cursor oldCursor = videoCursor;
+        if (oldCursor != null && videoDataSetObserver != null) {
+            oldCursor.unregisterDataSetObserver(videoDataSetObserver);
+        }
+        videoCursor = newCursor;
+        if (videoCursor != null) {
+            if (videoDataSetObserver != null) {
+                videoCursor.registerDataSetObserver(videoDataSetObserver);
+            }else {
+                setVideoDataSetObserver();
+            }
+            //mRowIdColumn = newCursor.getColumnIndexOrThrow(MovieUtils.VIDEO_COLUMN[MovieUtils.COL_VIDEO_ID]);
+            mRowIdColumn =0;
+            mDataValid = true;
+            notifyDataSetChanged();
+        } else {
+            mRowIdColumn = -1;
+            mDataValid = false;
+            notifyDataSetChanged();
+            //There is no notifyDataSetInvalidated() method in RecyclerView.Adapter
+        }
+        return oldCursor;
+    }
+
+    public Cursor swapReviewCursor(Cursor newCursor){
+        if (newCursor == reviewCursor) {
+            return null;
+        }
+        final Cursor oldCursor = reviewCursor;
+        if (oldCursor != null && reviewDataSetObserver != null) {
+            oldCursor.unregisterDataSetObserver(reviewDataSetObserver);
+        }
+        reviewCursor = newCursor;
+        if (reviewCursor != null) {
+            if (reviewDataSetObserver != null) {
+                reviewCursor.registerDataSetObserver(reviewDataSetObserver);
+            }else {
+                setReviewDataSetObserver();
+            }
+            //mRowIdColumn = newCursor.getColumnIndexOrThrow(MovieUtils.REVIEW_COLUMN[MovieUtils.COL_REVIEW_ID]);
+            mRowIdColumn = 0;
+            mDataValid = true;
+            notifyDataSetChanged();
+        } else {
+            mRowIdColumn = -1;
+            mDataValid = false;
+            notifyDataSetChanged();
+            //There is no notifyDataSetInvalidated() method in RecyclerView.Adapter
+        }
+        return oldCursor;
     }
 
     public void appendObject(Object object,int pos){
@@ -58,6 +237,24 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         notifyItemRangeInserted(pos,1);
 
     }
+
+    private class NotifyingDataSetObserver extends DataSetObserver {
+        @Override
+        public void onChanged() {
+            super.onChanged();
+            mDataValid = true;
+            notifyDataSetChanged();
+        }
+
+        @Override
+        public void onInvalidated() {
+            super.onInvalidated();
+            mDataValid = false;
+            notifyDataSetChanged();
+            //There is no notifyDataSetInvalidated() method in RecyclerView.Adapter
+        }
+    }
+
 
     public void appendObjectList(ArrayList<Object> list,int pos){
         movieItems.addAll(pos,list);
@@ -73,9 +270,159 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         notifyDataSetChanged();
     }
 
-     /*
-    Create all type of View Holders
-     */
+    @Override
+    public void setHasStableIds(boolean hasStableIds) {
+        if(MovieUtils.FAVORITE_FLAG)super.setHasStableIds(true);
+        else super.setHasStableIds(false);
+    }
+
+    //Applicable only on API level 23
+//    public void setExtra(Cursor cursor,int type){
+//        Bundle bundle = new Bundle();
+//        bundle.putInt("ITEM_TYPE",type);
+//        cursor.setExtras(bundle);
+//        //cursor.respond(bundle);
+//       // ((AbstractCursor) cursor).setExtras(bundle);
+//    }
+
+//    public int getExtra(Cursor cursor){
+//        Bundle bundle = cursor.getExtras();
+//        return bundle.getInt("ITEM_TYPE");
+//    }
+
+    public Cursor getCursorAtPosition(int pos){
+        if(pos == 0){
+            //setExtra(movieCursor,MovieUtils.MOVIE_DETAIL);
+            return movieCursor;
+        }else if(pos <= videoCursor.getCount()){
+            videoCursor.moveToPosition(pos - 1);
+            //setExtra(videoCursor,MovieUtils.VIDEO);
+            return videoCursor;
+        }else if(pos <= videoCursor.getCount() + reviewCursor.getCount()){
+            reviewCursor.moveToPosition(pos - (videoCursor.getCount() +1));
+            //setExtra(reviewCursor,MovieUtils.REVIEW);
+            return reviewCursor;
+        }else {
+            Log.e(LOG_TAG,"No cursor at pos " + pos);
+            throw new ArrayIndexOutOfBoundsException(pos);
+        }
+    }
+
+    @Override
+    public long getItemId(int position) {
+        if(!MovieUtils.FAVORITE_FLAG) return -1;
+        Cursor cursor = getCursorAtPosition(position);
+        if (mDataValid && getItemCount() != 0 && cursor != null) {
+            //switch (getExtra(cursor)){
+            switch (cursor.getColumnCount()){
+                case MovieUtils.MOVIE_DETAIL:
+                    return cursor.getLong(MovieUtils.COL_MOVIE_ID);
+                case MovieUtils.VIDEO:
+                    return cursor.getLong(MovieUtils.COL_VIDEO_ID);
+                case MovieUtils.REVIEW:
+                    return cursor.getLong(MovieUtils.COL_REVIEW_ID);
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public int getItemViewType(int position){
+        if(MovieUtils.FAVORITE_FLAG){
+           // return getExtra(getCursorAtPosition(position));
+            return getCursorAtPosition(position).getColumnCount();
+        }else {
+            Object object = movieItems.get(position);
+            if(object instanceof Movie){
+                return MovieUtils.MOVIE_DETAIL;
+            }else if(object instanceof Video){
+                return MovieUtils.VIDEO;
+            }else if(object instanceof Review){
+                return MovieUtils.REVIEW;
+            }else if (object instanceof String){
+                return MovieUtils.HEADER;
+            }else if (object instanceof SectionDataModel){
+                Log.i(LOG_TAG,"Recycler view Position is "+ position);
+                return MovieUtils.RECYCLER_VIEW;
+            }
+        }
+        return -1;
+    }
+
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType){
+        RecyclerView.ViewHolder viewHolder;
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        switch (viewType){
+            case MovieUtils.MOVIE_DETAIL:{
+                View view = inflater.inflate(R.layout.movie_item,parent,false);
+                viewHolder = new MovieDetailViewHolder(view);
+                break;
+            }
+            case MovieUtils.VIDEO:{
+                View view = inflater.inflate(R.layout.video_item,parent,false);
+                viewHolder = new VideoViewHolder(view);
+                break;
+            }
+            case MovieUtils.REVIEW:{
+                View view = inflater.inflate(R.layout.review_item,parent,false);
+                viewHolder = new ReviewViewHolder(view);
+                break;
+            }
+            case MovieUtils.RECYCLER_VIEW:{
+                View view = inflater.inflate(R.layout.inner_recycler,parent,false);
+                viewHolder = new InnerRecyclerViewHolder(view);
+                break;
+            }
+
+            case MovieUtils.HEADER:{
+                View view = inflater.inflate(R.layout.header_item,parent,false);
+                viewHolder = new HeaderViewHolder(view);
+                break;
+            }
+
+            default:{
+//                View view = inflater.inflate(R.layout.header_item,parent,false);
+//                viewHolder = new HeaderViewHolder(view);
+                viewHolder = null;
+                break;
+            }
+        }
+        return viewHolder;
+    }
+
+    @Override
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+
+        switch (holder.getItemViewType()){
+            case MovieUtils.MOVIE_DETAIL:
+                MovieDetailViewHolder movieDetailViewHolder = (MovieDetailViewHolder) holder;
+                configureMovieDetailViewHolder(movieDetailViewHolder,position);
+                break;
+            case MovieUtils.VIDEO:
+                VideoViewHolder videoViewHolder = (VideoViewHolder) holder;
+                configureVideoViewHolder(videoViewHolder,position);
+                break;
+            case MovieUtils.REVIEW:
+                ReviewViewHolder reviewViewHolder = (ReviewViewHolder) holder;
+                configureReviewViewHolder(reviewViewHolder,position);
+                break;
+            case MovieUtils.HEADER:
+                HeaderViewHolder headerViewHolder = (HeaderViewHolder) holder;
+                configureHeaderViewHolder(headerViewHolder,position);
+                break;
+            case MovieUtils.RECYCLER_VIEW:
+                InnerRecyclerViewHolder innerRecyclerViewHolder = (InnerRecyclerViewHolder) holder;
+                configureInnerRecyclerViewHolder(innerRecyclerViewHolder,position);
+                break;
+
+        }
+
+    }
+
+    /*
+   Create all type of View Holders
+    */
     public static class MovieDetailViewHolder extends RecyclerView.ViewHolder {
         @Bind(R.id.movie_item_backdrop_poster)
         ImageView backDropPoster;
@@ -123,7 +470,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 @Override
                 public void onClick(View v){
                     if(IS_YOUTUBE_INSTALLED){
-                       showVideoInLightBox();
+                        showVideoInLightBox();
                     }else {
                         Log.i("VideoHolder","Youtube is not installed in the phone");
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v=" + videoId));
@@ -148,7 +495,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             videoShareAction.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    System.out.println("You have Just Clicked on Share button");
                     Intent intent = new Intent(Intent.ACTION_SEND);
                     intent.putExtra(Intent.EXTRA_TEXT,"Hi, Check this new "+type.getText().toString()+" of "+ movieName +" \n "+ Uri.parse("http://www.youtube.com/watch?v="+videoId));
                     intent.setType("text/plain");
@@ -194,8 +540,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         @Bind(R.id.review_item_content)
         TextView content;
 
-
-
         public ReviewViewHolder(View view){
             super(view);
             ButterKnife.bind(this,view);
@@ -229,109 +573,26 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     }
 
-    @Override
-    public int getItemCount() {
-        return movieItems.size();
-    }
-
-    @Override
-    public int getItemViewType(int position){
-        Object object = movieItems.get(position);
-        if(object instanceof Movie){
-            return MOVIE_DETAIL;
-        }else if(object instanceof Video){
-            return VIDEO;
-        }else if(object instanceof Review){
-            return REVIEW;
-        }else if (object instanceof String){
-            return HEADER;
-        }else if (object instanceof SectionDataModel){
-            Log.i(LOG_TAG,"Recycler view Position is "+ position);
-            return RECYCLER_VIEW;
-        }
-
-        return -1;
-    }
-
-    @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType){
-        RecyclerView.ViewHolder viewHolder;
-        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        switch (viewType){
-            case MOVIE_DETAIL:{
-                View view = inflater.inflate(R.layout.movie_item,parent,false);
-                viewHolder = new MovieDetailViewHolder(view);
-                break;
-            }
-            case VIDEO:{
-                View view = inflater.inflate(R.layout.video_item,parent,false);
-                viewHolder = new VideoViewHolder(view);
-                break;
-            }
-            case REVIEW:{
-                View view = inflater.inflate(R.layout.review_item,parent,false);
-                viewHolder = new ReviewViewHolder(view);
-                break;
-            }
-            case RECYCLER_VIEW:{
-                View view = inflater.inflate(R.layout.inner_recycler,parent,false);
-                viewHolder = new InnerRecyclerViewHolder(view);
-                break;
-            }
-
-            case HEADER:{
-                View view = inflater.inflate(R.layout.header_item,parent,false);
-                viewHolder = new HeaderViewHolder(view);
-                break;
-            }
-
-            default:{
-//                View view = inflater.inflate(R.layout.header_item,parent,false);
-//                viewHolder = new HeaderViewHolder(view);
-                viewHolder = null;
-                break;
-            }
-        }
-        return viewHolder;
-    }
-
-    @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-
-        switch (holder.getItemViewType()){
-            case MOVIE_DETAIL:
-                MovieDetailViewHolder movieDetailViewHolder = (MovieDetailViewHolder) holder;
-                configureMovieDetailViewHolder(movieDetailViewHolder,position);
-                break;
-            case VIDEO:
-                VideoViewHolder videoViewHolder = (VideoViewHolder) holder;
-                configureVideoViewHolder(videoViewHolder,position);
-                break;
-            case REVIEW:
-                ReviewViewHolder reviewViewHolder = (ReviewViewHolder) holder;
-                configureReviewViewHolder(reviewViewHolder,position);
-                break;
-            case HEADER:
-                HeaderViewHolder headerViewHolder = (HeaderViewHolder) holder;
-                configureHeaderViewHolder(headerViewHolder,position);
-                break;
-            case RECYCLER_VIEW:
-                InnerRecyclerViewHolder innerRecyclerViewHolder = (InnerRecyclerViewHolder) holder;
-                configureInnerRecyclerViewHolder(innerRecyclerViewHolder,position);
-                break;
-
-        }
-
-    }
-
     public void configureMovieDetailViewHolder(MovieDetailViewHolder holder,int pos){
-        Movie movie = (Movie) movieItems.get(pos);
+
+        Movie movie;
+        if (MovieUtils.FAVORITE_FLAG){
+
+            movie = MovieUtils.getMovieFromCursor(getCursorAtPosition(pos),getActualPositionInCursor(pos));
+        }else movie= (Movie) movieItems.get(pos);
 
         /* Possible Image size are "w92", "w154", "w185", "w342", "w500", "w780", or "original" */
         //final String SIZE="w185/";
         holder.posterImage.setAdjustViewBounds(true);
-        Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w185/" + movie.getPosterPath()).placeholder(R.drawable.placeholder).into(holder.posterImage);
-        Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w500/"+ movie.getBackdropPath()).placeholder(R.drawable.loading_placeholder).into(holder.backDropPoster);
+        if(MovieUtils.FAVORITE_FLAG){
+            Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getPosterPath())).fit().placeholder(R.drawable.placeholder).into(holder.posterImage);
+            Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getBackdropPath())).placeholder(R.drawable.loading_placeholder).into(holder.backDropPoster);
+
+        }else {
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w185/" + movie.getPosterPath()).placeholder(R.drawable.placeholder).fit().into(holder.posterImage);
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w500/"+ movie.getBackdropPath()).placeholder(R.drawable.loading_placeholder).fit().into(holder.backDropPoster);
+        }
+
         holder.title.setText(movie.getTitle());
         holder.releaseDate.setText(MovieUtils.formateDate(movie.getReleaseDate(),"yyyy-MM-dd","MMM, yyyy"));
         holder.rating.setText(String.format("%.1f",movie.getVoteAverage()));
@@ -341,36 +602,42 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     public void configureVideoViewHolder(VideoViewHolder holder,int pos){
-        Video video = (Video) movieItems.get(pos);
-        String QUALITY = "/hqdefault.jpg";
-        Picasso.with(mContext).load(MovieUtils.BASE_URL_VIDEO_THUMBNAIL + video.getKey() + QUALITY).placeholder(R.drawable.grey_placeholder)
-                .into(holder.poster);
+        Video video;
+        if(MovieUtils.FAVORITE_FLAG){
+            video = MovieUtils.getVideoFromCursor(getCursorAtPosition(pos),getActualPositionInCursor(pos));
+        }else {
+            video = (Video) movieItems.get(pos);
+        }
+        final String QUALITY = "/hqdefault.jpg";
+        if(MovieUtils.FAVORITE_FLAG){
+            Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/videoPoster/"+video.getKey()+".jpg")).placeholder(R.drawable.grey_placeholder)
+                    .into(holder.poster);
+        }else {
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_VIDEO_THUMBNAIL + video.getKey() + QUALITY).placeholder(R.drawable.grey_placeholder)
+                    .into(holder.poster);
+        }
         holder.setActivity(mActivity);
         holder.name.setText(video.getName());
         holder.type.setText(video.getType());
         holder.lang.setText(video.getIso6391());
         holder.setVideoId(video.getKey());
-        Movie movie = (Movie) movieItems.get(0);
-        holder.setMovieName(movie.getTitle());
-//        holder.setClickListener(new ItemClickListener() {
-//            @Override
-//            public void onClick(View view, int position, boolean isLongClick) {
-//
-//                if(isLongClick){
-//                    Toast.makeText(mContext,"Hello",
-//                            Toast.LENGTH_SHORT).show();
-//                }else{
-//                    Toast.makeText(mContext,"hi",
-//                            Toast.LENGTH_SHORT).show();
-//
-//                }
-//            }
-//        });
-
+        String movieName;
+        if(MovieUtils.FAVORITE_FLAG){
+            movieName = movieCursor.getString(MovieUtils.COL_MOVIE_TITLE);
+        }else {
+            Movie movie = (Movie) movieItems.get(0);
+            movieName = movie.getTitle();
+        }
+        holder.setMovieName(movieName);
     }
 
     public void configureReviewViewHolder(ReviewViewHolder holder,int pos){
-        Review review = (Review) movieItems.get(pos);
+        Review review;
+        if(MovieUtils.FAVORITE_FLAG){
+            review = MovieUtils.getReviewFromCursor(getCursorAtPosition(pos),getActualPositionInCursor(pos));
+        }else {
+            review = (Review) movieItems.get(pos);
+        }
         holder.name.setText(review.getAuthor());
         holder.content.setText(review.getContent());
     }
@@ -385,10 +652,9 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         final LinearLayoutManager layoutManager =
                 new LinearLayoutManager(mContext,LinearLayoutManager.HORIZONTAL,false);
         holder.sectionTitle.setText(sectionDataModel.getSectionTitle());
-        HorizontalRecyclerAdapter adapter = new HorizontalRecyclerAdapter(mContext,sectionDataModel.getAllItemsInSection());
-        holder.innerRecyclerView.setAdapter(adapter);
+        HorizontalRecyclerAdapter adapter = new HorizontalRecyclerAdapter(mActivity,sectionDataModel.getAllItemsInSection());
         holder.innerRecyclerView.setLayoutManager(layoutManager);
-
+        holder.innerRecyclerView.setAdapter(adapter);
     }
 
 }

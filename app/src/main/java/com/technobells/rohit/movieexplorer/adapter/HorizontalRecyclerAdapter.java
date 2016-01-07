@@ -1,6 +1,7 @@
 package com.technobells.rohit.movieexplorer.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -8,8 +9,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
+import com.technobells.rohit.movieexplorer.MovieDetailActivity;
 import com.technobells.rohit.movieexplorer.R;
 import com.technobells.rohit.movieexplorer.model.Cast;
 import com.technobells.rohit.movieexplorer.model.Movie;
@@ -25,8 +28,6 @@ import butterknife.ButterKnife;
  */
 public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
     private static final String LOG_TAG = HorizontalRecyclerAdapter.class.getSimpleName();
-    private static final int CAST = 2;
-    private static final int SIMILAR = 4;
     private ArrayList<Object> itemsConnectedtoMovie = new ArrayList<>();
     private Context mContext;
 
@@ -53,8 +54,10 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
         ImageView poster;
         @Bind(R.id.cast_card_name)
         TextView name;
-        @Bind(R.id.cast_card_charater)
-        TextView charater;
+        @Bind(R.id.cast_card_character)
+        TextView character;
+        int pos;
+        Context context;
         public CastViewHolder(View view){
             super(view);
             Log.i("CastViewHolder","CastViewHolder Created");
@@ -70,13 +73,23 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
         TextView rating;
         @Bind(R.id.movie_card_item_release_date)
         TextView releaseDate;
-
+        Context context;
+        int pos;
+        Movie movie;
         public SimilarMovieViewHolder(View view){
             super(view);
-
             Log.i("SimilarMovieHolder","SimilarMovieViewHolder Created");
-
             ButterKnife.bind(this,view);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //do something
+                    //Toast.makeText(context,"You clicked the similar Movies",Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(context,MovieDetailActivity.class);
+                    intent.putExtra("movieTag",movie);
+                    v.getContext().startActivity(intent);
+                }
+            });
         }
     }
 
@@ -102,10 +115,10 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
         Object object = itemsConnectedtoMovie.get(position);
         if(object instanceof Movie){
             Log.i(LOG_TAG,"the object type is Movie");
-            return SIMILAR;
+            return MovieUtils.SIMILAR;
         }else if(object instanceof Cast){
             Log.i(LOG_TAG,"the object type is Cast");
-            return CAST;
+            return MovieUtils.CAST;
         }
         Log.i(LOG_TAG,"Unable to determine the object type");
         return -1;
@@ -113,17 +126,17 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
 
 
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType){
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         RecyclerView.ViewHolder viewHolder;
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         switch (viewType){
 
-            case CAST:{
+            case MovieUtils.CAST:{
                 View view = inflater.inflate(R.layout.cast_card,parent,false);
                 viewHolder = new CastViewHolder(view);
                 break;
             }
-            case SIMILAR:{
+            case MovieUtils.SIMILAR:{
                 View view = inflater.inflate(R.layout.movie_card,parent,false);
                 viewHolder = new SimilarMovieViewHolder(view);
                 break;
@@ -143,12 +156,12 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
     public void onBindViewHolder(RecyclerView.ViewHolder holder,int pos){
         Log.i(LOG_TAG,"Inside onBindViewHolder Method");
         switch (holder.getItemViewType()){
-            case CAST:
+            case MovieUtils.CAST:
                 CastViewHolder castViewHolder = (CastViewHolder) holder;
                 configureCastViewHolder(castViewHolder,pos);
                 break;
 
-            case SIMILAR:
+            case MovieUtils.SIMILAR:
                 SimilarMovieViewHolder similarMovieViewHolder = (SimilarMovieViewHolder) holder;
                 configureSimilarMovieViewHolder(similarMovieViewHolder,pos);
                 break;
@@ -159,17 +172,41 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
     public void configureCastViewHolder(CastViewHolder holder,int pos){
         Cast cast = (Cast) itemsConnectedtoMovie.get(pos);
         holder.name.setText(cast.getName());
-        holder.charater.setText(cast.getCharacter());
-        Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE+"w154/"+ cast.getProfilePath()).
-                placeholder(R.drawable.placeholder).into(holder.poster);
+        holder.character.setText(cast.getCharacter());
+
+        holder.pos = pos;
+        holder.context = mContext;
+        if(MovieUtils.SCREEN_DENSITY > 1.0) {
+            Log.i(LOG_TAG,"Screen Density is :" + MovieUtils.SCREEN_DENSITY);
+            holder.poster.setAdjustViewBounds(true);
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE+"w184/"+ cast.getProfilePath()).
+                    placeholder(R.drawable.placeholder)
+                    .fit().into(holder.poster);
+        }else {
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE+"w154/"+ cast.getProfilePath()).
+                    placeholder(R.drawable.placeholder)
+                    .fit().into(holder.poster);
+        }
     }
 
     public void configureSimilarMovieViewHolder(SimilarMovieViewHolder holder,int pos){
         Movie movie = (Movie) itemsConnectedtoMovie.get(pos);
         holder.rating.setText(String.format("%.1f",movie.getVoteAverage()));
         holder.releaseDate.setText(MovieUtils.formateDate(movie.getReleaseDate(),"yyyy-MM-dd","yyyy"));
-        Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE +"w154/"+movie.getPosterPath())
-                .placeholder(R.drawable.placeholder).into(holder.poster);
+
+        holder.context = mContext;
+        holder.pos = pos;
+        holder.movie = movie;
+        if(MovieUtils.SCREEN_DENSITY > 1.0){
+            holder.poster.setAdjustViewBounds(true);
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE +"w185/"+movie.getPosterPath())
+                    .placeholder(R.drawable.placeholder)
+                    .fit()
+                    .into(holder.poster);
+        }else {
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE +"w154/"+movie.getPosterPath())
+                    .placeholder(R.drawable.placeholder).into(holder.poster);
+        }
     }
 
 }
