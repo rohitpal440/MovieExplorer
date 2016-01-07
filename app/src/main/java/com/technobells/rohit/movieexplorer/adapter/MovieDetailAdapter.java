@@ -30,6 +30,7 @@ import com.technobells.rohit.movieexplorer.model.Review;
 import com.technobells.rohit.movieexplorer.model.Video;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import butterknife.Bind;
@@ -65,24 +66,24 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         reviewCursor = null;
         IS_YOUTUBE_INSTALLED = (YouTubeApiServiceUtil.isYouTubeApiServiceAvailable(mContext)== YouTubeInitializationResult.SUCCESS);
     }
-
-    public void setMovieCursor(Cursor movieCursor){
-        this.movieCursor = movieCursor;
-        setMovieDataSetObserver();
-        if(this.movieCursor != null && videoCursor != null) mDataValid =true;
-        notifyDataSetChanged();
-    }
-    public void setVideoCursor(Cursor videoCursor){
-        this.videoCursor = videoCursor;
-        setVideoDataSetObserver();
-        if(this.movieCursor != null && videoCursor != null) mDataValid =true;
-        notifyDataSetChanged();
-    }
-    public void setReviewCursor(Cursor reviewCursor){
-        this.reviewCursor = reviewCursor;
-        setReviewDataSetObserver();
-        notifyDataSetChanged();
-    }
+//
+//    public void setMovieCursor(Cursor movieCursor){
+//        this.movieCursor = movieCursor;
+//        setMovieDataSetObserver();
+//        if(this.movieCursor != null && videoCursor != null) mDataValid =true;
+//        notifyDataSetChanged();
+//    }
+//    public void setVideoCursor(Cursor videoCursor){
+//        this.videoCursor = videoCursor;
+//        setVideoDataSetObserver();
+//        if(this.movieCursor != null && videoCursor != null) mDataValid =true;
+//        notifyDataSetChanged();
+//    }
+//    public void setReviewCursor(Cursor reviewCursor){
+//        this.reviewCursor = reviewCursor;
+//        setReviewDataSetObserver();
+//        notifyDataSetChanged();
+//    }
     public void setMovieDataSetObserver(){
         movieDataSetObserver = new NotifyingDataSetObserver();
         if (movieCursor != null) {
@@ -590,8 +591,15 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         /* Possible Image size are "w92", "w154", "w185", "w342", "w500", "w780", or "original" */
         //final String SIZE="w185/";
         holder.posterImage.setAdjustViewBounds(true);
-        Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w185/" + movie.getPosterPath()).placeholder(R.drawable.placeholder).into(holder.posterImage);
-        Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w500/"+ movie.getBackdropPath()).placeholder(R.drawable.loading_placeholder).into(holder.backDropPoster);
+        if(MovieUtils.FAVORITE_FLAG){
+            Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getPosterPath())).placeholder(R.drawable.placeholder).into(holder.posterImage);
+            Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getBackdropPath())).placeholder(R.drawable.loading_placeholder).into(holder.backDropPoster);
+
+        }else {
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w185/" + movie.getPosterPath()).placeholder(R.drawable.placeholder).into(holder.posterImage);
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w500/"+ movie.getBackdropPath()).placeholder(R.drawable.loading_placeholder).into(holder.backDropPoster);
+        }
+
         holder.title.setText(movie.getTitle());
         holder.releaseDate.setText(MovieUtils.formateDate(movie.getReleaseDate(),"yyyy-MM-dd","MMM, yyyy"));
         holder.rating.setText(String.format("%.1f",movie.getVoteAverage()));
@@ -608,8 +616,13 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             video = (Video) movieItems.get(pos);
         }
         final String QUALITY = "/hqdefault.jpg";
-        Picasso.with(mContext).load(MovieUtils.BASE_URL_VIDEO_THUMBNAIL + video.getKey() + QUALITY).placeholder(R.drawable.grey_placeholder)
-                .into(holder.poster);
+        if(MovieUtils.FAVORITE_FLAG){
+            Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/videoPoster/"+video.getKey()+".jpg")).placeholder(R.drawable.grey_placeholder)
+                    .into(holder.poster);
+        }else {
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_VIDEO_THUMBNAIL + video.getKey() + QUALITY).placeholder(R.drawable.grey_placeholder)
+                    .into(holder.poster);
+        }
         holder.setActivity(mActivity);
         holder.name.setText(video.getName());
         holder.type.setText(video.getType());
@@ -629,8 +642,9 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         Review review;
         if(MovieUtils.FAVORITE_FLAG){
             review = MovieUtils.getReviewFromCursor(getCursorAtPosition(pos),getActualPositionInCursor(pos));
-        }else  review = (Review) movieItems.get(pos);
-
+        }else {
+            review = (Review) movieItems.get(pos);
+        }
         holder.name.setText(review.getAuthor());
         holder.content.setText(review.getContent());
     }
@@ -645,10 +659,9 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         final LinearLayoutManager layoutManager =
                 new LinearLayoutManager(mContext,LinearLayoutManager.HORIZONTAL,false);
         holder.sectionTitle.setText(sectionDataModel.getSectionTitle());
-        HorizontalRecyclerAdapter adapter = new HorizontalRecyclerAdapter(mContext,sectionDataModel.getAllItemsInSection());
-        holder.innerRecyclerView.setAdapter(adapter);
+        HorizontalRecyclerAdapter adapter = new HorizontalRecyclerAdapter(mActivity,sectionDataModel.getAllItemsInSection());
         holder.innerRecyclerView.setLayoutManager(layoutManager);
-
+        holder.innerRecyclerView.setAdapter(adapter);
     }
 
 }

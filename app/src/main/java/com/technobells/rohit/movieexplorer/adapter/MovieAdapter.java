@@ -20,6 +20,7 @@ import com.technobells.rohit.movieexplorer.R;
 import com.technobells.rohit.movieexplorer.model.Movie;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import butterknife.Bind;
@@ -131,7 +132,11 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
         final String SIZE="w185/";
         //Glide.with(mContext).load( MovieUtils.BASE_URL_IMAGE+ SIZE + movie.getPosterPath()).into(holder.posterImage);
         holder.posterImage.setAdjustViewBounds(true);
-        Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + SIZE + movie.getPosterPath()).placeholder(R.drawable.placeholder).into(holder.posterImage);
+        if(MovieUtils.FAVORITE_FLAG) {
+            Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getPosterPath())).placeholder(R.drawable.placeholder).into(holder.posterImage);
+        }else {
+            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + SIZE + movie.getPosterPath()).placeholder(R.drawable.placeholder).into(holder.posterImage);
+        }
         holder.setClickListener(new ItemClickListener() {
             @Override
             public void onClick(View view, int position, boolean isLongClick) {

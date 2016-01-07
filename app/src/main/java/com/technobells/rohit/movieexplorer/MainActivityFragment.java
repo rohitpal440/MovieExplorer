@@ -1,7 +1,6 @@
 package com.technobells.rohit.movieexplorer;
 
 import android.database.Cursor;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -20,7 +19,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.technobells.rohit.movieexplorer.adapter.MovieAdapter;
 import com.technobells.rohit.movieexplorer.data.FavoriteMoviesContract;
@@ -51,10 +49,10 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
     private String SAVED_SORT_PREF = "savedSortPref";
     private String SAVED_PAGE_NO = "page";
     private final int MOVIE_LOADER = 0;
-    private boolean favroriteClicked = false;
+    private boolean favoriteClicked = false;
     private MovieAdapter movieAdapter;
     private ArrayList<Movie> movieArrayList= new ArrayList<>();
-    private String sortBy="popularity.desc"; //Default sorting order
+    private String sortBy = "popularity.desc"; //Default sorting order
     private String sortOrder = FavoriteMoviesContract.MovieEntry.COLUMN_POPULARITY + " DESC ";// for database sorting.
     private int page = 1;
 
@@ -66,55 +64,6 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
     public MainActivityFragment() {
     }
 
-    /*
-    Fetch data from internet on onCreate Activity or whenever is required
- */
-    private void updateMoviePoster(){
-        load = false;
-        MovieApiService moviesApiService = MovieUtils.retrofitInstance.create(MovieApiService.class);
-        Call<JsonRequestDiscoverMovieResult> call = moviesApiService.getDiscoverMovieFeed(
-                                                            sortBy,
-                                                            page,
-                                                            MovieUtils.MIN_VOTE_COUNT,
-                                                            BuildConfig.MY_MOVIE_DB_API_KEY);
-        call.enqueue(new Callback<JsonRequestDiscoverMovieResult>(){
-            @Override
-            public void onResponse(Response<JsonRequestDiscoverMovieResult> response, Retrofit retrofit1) {
-                JsonRequestDiscoverMovieResult jsonRequestDiscoverMovieResult = response.body();
-                if (jsonRequestDiscoverMovieResult != null) {
-                    ArrayList<Movie> results = (ArrayList<Movie>) jsonRequestDiscoverMovieResult.getResults();
-
-                    movieArrayList.addAll(results);
-                    Log.i(LOG_TAG,"Making Request to network with page id " + page
-                            +"\nMovie Array list contains :" + movieArrayList.size());
-
-                    //if(page ==1) movieAdapter.clear();
-                    movieAdapter.addAll(results);
-
-                }else{
-                    Log.e(LOG_TAG,"Getting null object of JsonRequestDiscoverMovieResult");
-                    try {
-                        String str =response.errorBody().string();
-                        Log.e(LOG_TAG,str);
-
-                    }catch (IOException e){
-                        Log.e(LOG_TAG,"IOException inside the response errorBody");
-                    }
-
-                }
-                swipeRefreshLayout.setRefreshing(false);
-                load = true;
-            }
-            @Override
-            public void onFailure(Throwable t){
-                Log.e(LOG_TAG,"Retrofit Response failure");
-                Toast.makeText(getContext(),"Failed to Load. \nCheck Your Internet Connection",Toast.LENGTH_SHORT).show();
-                load = true;
-                swipeRefreshLayout.setRefreshing(false);
-            }
-        });
-
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -126,7 +75,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
          */
         DisplayMetrics metrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        int columnCount = (metrics.widthPixels/(int)getResources().getDimension(R.dimen.column_width));
+        int columnCount = (metrics.widthPixels/(int)getResources().getDimension(R.dimen.movie_card_width_in_grid));
         final GridLayoutManager gridLayoutManager =
                 new GridLayoutManager(getContext(),columnCount>2?columnCount:2);
 
@@ -151,39 +100,54 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
 
-        /*
-            Creating the listener for infinite scroll.
+        /**
+         *  Creating the listener for infinite scroll.
          */
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener(){
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx,int dy){
-                if(dy>0 && load){///vertical scroll check for downward scroll
-
+                if(dy>0 && load && !MovieUtils.FAVORITE_FLAG){///vertical scroll check for downward scroll
                     if(gridLayoutManager.getChildCount() + gridLayoutManager.findFirstVisibleItemPosition()
                             >= gridLayoutManager.getItemCount() ){
-
                         page++;
-                        Log.i(LOG_TAG,"At the End of GridList. \nLoading more items with page No. " + page);
                         updateMoviePoster();
                     }
                 }
             }
         });
 
-        /*
-            lets set the on item click listener
-         */
-
-
-
+//        MaterialFavoriteButton toolbarFavorite = new MaterialFavoriteButton.Builder(getActivity())
+//                .favorite(MovieUtils.FAVORITE_FLAG)
+//                .color(MaterialFavoriteButton.STYLE_WHITE)
+//                .type(MaterialFavoriteButton.STYLE_HEART)
+//                .bounceDuration(200)
+//                .create();
+//
+//
+//        getActivity().getActionBar().addView(toolbarFavorite);
+//        toolbarFavorite.setOnFavoriteChangeListener(
+//                new MaterialFavoriteButton.OnFavoriteChangeListener(){
+//                    @Override
+//                    public void onFavoriteChanged(MaterialFavoriteButton button,boolean favorite){
+//                        favoriteClicked = true;
+//                        if( !MovieUtils.FAVORITE_FLAG ){
+//                            MovieUtils.FAVORITE_FLAG = true;
+//                            showFavoriteMovies();
+//                        } else{
+//                            MovieUtils.FAVORITE_FLAG = false;
+//                            showAllMovies();
+//                        }
+//                    }
+//                }
+//        );
+        if(MovieUtils.FAVORITE_FLAG) getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
         if(savedInstanceState==null
                 || ! savedInstanceState.containsKey(SAVED_MOVIE_LIST)
                 || ! savedInstanceState.containsKey(SAVED_SORT_PREF)
                 || ! savedInstanceState.containsKey(SAVED_PAGE_NO)){
-
             updateMoviePoster();
         }else{
-            Log.i(LOG_TAG,"Retaining from Saved instances ");
+
             movieArrayList = savedInstanceState.getParcelableArrayList(SAVED_MOVIE_LIST);
             movieAdapter.addAll( movieArrayList);
             sortBy=savedInstanceState.getString(SAVED_SORT_PREF);
@@ -220,7 +184,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
 
         switch(id){
            case R.id.menu_item_favorite:
-                favroriteClicked = true;
+                favoriteClicked = true;
                 if( !MovieUtils.FAVORITE_FLAG ){
                     MovieUtils.FAVORITE_FLAG = true;
                     showFavoriteMovies();
@@ -266,7 +230,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
     }
 
     public void showFavoriteMovies(){
-        if(!favroriteClicked)getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+        if(!favoriteClicked)getLoaderManager().initLoader(MOVIE_LOADER, null, this);
         getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
     }
 
@@ -307,10 +271,63 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {}
 
+
+    /*
+  Fetch data from internet on onCreate Activity or whenever is required
+*/
+    private void updateMoviePoster(){
+        load = false;
+        MovieApiService moviesApiService = MovieUtils.retrofitInstance.create(MovieApiService.class);
+        Call<JsonRequestDiscoverMovieResult> call = moviesApiService.getDiscoverMovieFeed(
+                sortBy,
+                page,
+                MovieUtils.MIN_VOTE_COUNT,
+                BuildConfig.MY_MOVIE_DB_API_KEY);
+        call.enqueue(new Callback<JsonRequestDiscoverMovieResult>(){
+            @Override
+            public void onResponse(Response<JsonRequestDiscoverMovieResult> response, Retrofit retrofit1) {
+                JsonRequestDiscoverMovieResult jsonRequestDiscoverMovieResult = response.body();
+                if (jsonRequestDiscoverMovieResult != null) {
+                    ArrayList<Movie> results = (ArrayList<Movie>) jsonRequestDiscoverMovieResult.getResults();
+
+                    movieArrayList.addAll(results);
+                    Log.i(LOG_TAG,"Making Request to network with page id " + page
+                            +"\nMovie Array list contains :" + movieArrayList.size());
+
+                    //if(page ==1) movieAdapter.clear();
+                    movieAdapter.addAll(results);
+
+                }else{
+                    Log.e(LOG_TAG,"Getting null object of JsonRequestDiscoverMovieResult");
+                    try {
+                        String str =response.errorBody().string();
+                        Log.e(LOG_TAG,str);
+
+                    }catch (IOException e){
+                        Log.e(LOG_TAG,"IOException inside the response errorBody");
+                    }
+
+                }
+                swipeRefreshLayout.setRefreshing(false);
+                load = true;
+            }
+            @Override
+            public void onFailure(Throwable t){
+                Log.e(LOG_TAG,"Retrofit Response failure");
+                Snackbar.make(getView(), "No Internet Connection", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                load = true;
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
+    }
+
+
+
     @Override
     public void onSaveInstanceState(Bundle saveState){
         super.onSaveInstanceState(saveState);
-        Log.i(LOG_TAG,"Saving instances before destroying the activity");
         //check if movieOldClassArrayList is not empty,in this way we don't get null pointer exception when activity is recreated
         if(movieArrayList !=null) saveState.putParcelableArrayList(SAVED_MOVIE_LIST, movieArrayList);
         saveState.putString(SAVED_SORT_PREF,sortBy);
