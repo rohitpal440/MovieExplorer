@@ -32,7 +32,6 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
     private Context mContext;
 
     public HorizontalRecyclerAdapter(Context mContext){
-        Log.i(LOG_TAG,"Inner Adapter Created");
         this.mContext=mContext;
     }
 
@@ -43,7 +42,6 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
     }
 
     public void addAll(ArrayList<Object> objects){
-        Log.i(LOG_TAG,"Got "+ objects.size()+ " from Parent Recycler");
         itemsConnectedtoMovie.addAll(objects);
         notifyDataSetChanged();
     }
@@ -60,7 +58,6 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
         Context context;
         public CastViewHolder(View view){
             super(view);
-            Log.i("CastViewHolder","CastViewHolder Created");
             ButterKnife.bind(this,view);
         }
     }
@@ -78,7 +75,7 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
         Movie movie;
         public SimilarMovieViewHolder(View view){
             super(view);
-            Log.i("SimilarMovieHolder","SimilarMovieViewHolder Created");
+
             ButterKnife.bind(this,view);
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -114,13 +111,13 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
     public int getItemViewType(int position){
         Object object = itemsConnectedtoMovie.get(position);
         if(object instanceof Movie){
-            Log.i(LOG_TAG,"the object type is Movie");
+
             return MovieUtils.SIMILAR;
         }else if(object instanceof Cast){
-            Log.i(LOG_TAG,"the object type is Cast");
+
             return MovieUtils.CAST;
         }
-        Log.i(LOG_TAG,"Unable to determine the object type");
+        Log.e(LOG_TAG,"Unable to determine the object type");
         return -1;
     }
 
@@ -154,7 +151,6 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder,int pos){
-        Log.i(LOG_TAG,"Inside onBindViewHolder Method");
         switch (holder.getItemViewType()){
             case MovieUtils.CAST:
                 CastViewHolder castViewHolder = (CastViewHolder) holder;
@@ -177,7 +173,6 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
         holder.pos = pos;
         holder.context = mContext;
         if(MovieUtils.SCREEN_DENSITY > 1.0) {
-            Log.i(LOG_TAG,"Screen Density is :" + MovieUtils.SCREEN_DENSITY);
             holder.poster.setAdjustViewBounds(true);
             Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE+"w184/"+ cast.getProfilePath()).
                     placeholder(R.drawable.placeholder)
@@ -198,7 +193,7 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
         holder.pos = pos;
         holder.movie = movie;
         if(MovieUtils.SCREEN_DENSITY > 1.0){
-            holder.poster.setAdjustViewBounds(true);
+           // holder.poster.setAdjustViewBounds(true);
             Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE +"w185/"+movie.getPosterPath())
                     .placeholder(R.drawable.placeholder)
                     .fit()

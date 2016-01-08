@@ -15,4 +15,5 @@
     android:clipToPadding="true"
     android:orientation ="vertical"
     />
+
 </android.support.v4.widget.SwipeRefreshLayout>

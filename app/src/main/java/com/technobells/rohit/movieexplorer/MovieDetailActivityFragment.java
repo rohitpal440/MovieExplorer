@@ -1,15 +1,20 @@
 package com.technobells.rohit.movieexplorer;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.content.SharedPreferencesCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -73,9 +78,12 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
     private final String SAVED_REVIEW_LIST = "reviews";
     private final String SAVED_CAST_LIST = "casts";
     private final String SAVED_SIMILAR_MOVIES_LIST = "similarMovies";
+    SharedPreferences sharedPrefMovieList;
 
     @Bind(R.id.fragment_movie_detail_recycler_view)
     RecyclerView recyclerView;
+    @Bind(R.id.fragment_movie_detail_fab)
+    FloatingActionButton fab;
 
     public MovieDetailActivityFragment() {}
 
@@ -97,14 +105,13 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
             @Override
             public void onResponse(Response<JsonRequestMovieVideoResult> response, Retrofit retrofit1) {
                 JsonRequestMovieVideoResult jsonRequestMovieVideoResult = response.body();
-                Log.i(LOG_TAG,"Got JsonRequestMovieVideo Result with id : " + jsonRequestMovieVideoResult.getId());
                 if (jsonRequestMovieVideoResult != null) {
                     ArrayList<Video> results = (ArrayList<Video>) jsonRequestMovieVideoResult.getVideos();
                     if(results.size()>0){
                         ArrayList<Object> temp = new ArrayList<Object>();
                         temp.add("Related Videos");
                         temp.addAll(results);
-                        Log.i(LOG_TAG,"Got "+results.size()+" Videos.\n Inserting Video Section with :"+temp.size()+" values.");
+                        //Log.i(LOG_TAG,"Got "+results.size()+" Videos.\n Inserting Video Section with :"+temp.size()+" values.");
                         mAdapter.appendObjectList(temp,1);
                         videos.clear();
                         videos.addAll(results);
@@ -113,7 +120,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                     Log.e(LOG_TAG,"Getting null object of (VIDEO) JsonRequestMovieVideoResult");
                     try {
                         String str =response.errorBody().string();
-                        Log.i(LOG_TAG,"Retrofit Review Response error : "+str);
+                        Log.e(LOG_TAG,"Retrofit Review Response error : "+str);
 
                     }catch (IOException e){
                         Log.e(LOG_TAG,"IOexception inside the response");
@@ -123,7 +130,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
             }
             @Override
             public void onFailure(Throwable t){
-                Log.i(LOG_TAG,"Retrofit Response failure for Video Fetch Request");
+                Log.e(LOG_TAG,"Retrofit Response failure for Video Fetch Request");
 
             }
         });
@@ -141,12 +148,11 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                 if (jsonRequestMovieCreditsResult != null) {
                     ArrayList<Cast> results = (ArrayList<Cast>) jsonRequestMovieCreditsResult.getCast();
                     if(results.size()>0){
-
                         SectionDataModel castSection = new SectionDataModel();
                         castSection.setSectionTitle("Star Cast ");
                         castSection.setAllItemsInSection(results,null);
                         Object temp =  castSection;
-                        Log.i(LOG_TAG,"Got "+results.size()+" Cast Members.\n Inserting Cast Section");
+                        //Log.i(LOG_TAG,"Got "+results.size()+" Cast Members.\n Inserting Cast Section");
                         mAdapter.appendObject(temp,(videos.size()>0?videos.size()+1:0)+1);
                         casts.addAll(results);
                     }
@@ -154,7 +160,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                     Log.e(LOG_TAG,"Getting null object of (Cast) JsonRequestMovieReviewResult ");
                     try {
                         String str =response.errorBody().string();
-                        Log.i(LOG_TAG,"Retrofit Cast Response error : "+str);
+                        Log.e(LOG_TAG,"Retrofit Cast Response error : "+str);
 
                     }catch (IOException e){
                         Log.e(LOG_TAG,"IOexception inside the response");
@@ -165,7 +171,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
             }
             @Override
             public void onFailure(Throwable t){
-                Log.i(LOG_TAG,"Retrofit Response failure for Cast Fetch Request");
+                Log.e(LOG_TAG,"Retrofit Response failure for Cast Fetch Request");
 //                if(++progress >= 4){
 //                    swipeRefreshLayout.setRefreshing(false);
 //                }
@@ -189,7 +195,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                         ArrayList<Object> temp = new ArrayList<Object>();
                         temp.add("Reviews");
                         temp.addAll(results);
-                        Log.i(LOG_TAG,"Got "+results.size()+" Reviews.\nInserting Review Section with "+temp.size()+" values.");
+                        //Log.i(LOG_TAG,"Got "+results.size()+" Reviews.\nInserting Review Section with "+temp.size()+" values.");
                         mAdapter.appendObjectList(temp,(videos.size()>0?videos.size()+1:0)+(casts.size() > 0 ?1:0)+1);
                         reviews.clear();
                         reviews.addAll(results);
@@ -198,7 +204,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                     Log.e(LOG_TAG,"Getting null object of (REVIEW) JsonRequestMovieReviewResult ");
                     try {
                         String str =response.errorBody().string();
-                        Log.i(LOG_TAG,"Retrofit Review Response error : "+str);
+                        Log.e(LOG_TAG,"Retrofit Review Response error : "+str);
 
                     }catch (IOException e){
                         Log.e(LOG_TAG,"IOexception inside the response");
@@ -208,7 +214,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
             }
             @Override
             public void onFailure(Throwable t){
-                Log.i(LOG_TAG,"Retrofit Response failure for Review Fetch Request");
+                Log.e(LOG_TAG,"Retrofit Response failure for Review Fetch Request");
             }
         });
     }
@@ -231,7 +237,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                         similarMoviesSection.setAllItemsInSection(null,results);
 
                         Object temp = similarMoviesSection;
-                        Log.i(LOG_TAG,"Got : " + results.size() + " similar movies");
+                        //Log.i(LOG_TAG,"Got : " + results.size() + " similar movies");
                         mAdapter.appendObject(temp,(videos.size()>0?videos.size()+1:0)+(casts.size()>0?1:0)+(reviews.size()>0?reviews.size()+1:0)+1);
                         similarMovies.addAll(results);
                     }
@@ -239,7 +245,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                     Log.e(LOG_TAG,"Getting null object of (Similar Movies) JsonRequestMovieReviewResult ");
                     try {
                         String str =response.errorBody().string();
-                        Log.i(LOG_TAG,"Retrofit Similar Movies Response error : "+str);
+                        Log.e(LOG_TAG,"Retrofit Similar Movies Response error : "+str);
 
                     }catch (IOException e){
                         Log.e(LOG_TAG,"IOexception inside the response");
@@ -249,7 +255,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
             }
             @Override
             public void onFailure(Throwable t){
-                Log.i(LOG_TAG,"Retrofit Response failure for Similar Movies Request");
+                Log.e(LOG_TAG,"Retrofit Response failure for Similar Movies Request");
             }
         });
 
@@ -317,7 +323,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         if(MovieUtils.FAVORITE_FLAG){
-            Log.i(LOG_TAG,"Inside onActivityCreated(), Setting up the loaders");
+            //Log.i(LOG_TAG,"Inside onActivityCreated(), Setting up the loaders");
 
             getLoaderManager().initLoader(MOVIE_LOADER, null, this);
             getLoaderManager().initLoader(VIDEO_LOADER, null, this);
@@ -341,10 +347,9 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
     public boolean onOptionsItemSelected(MenuItem item){
         int id = item.getItemId();
         switch (id){
-            case R.id.menu_item_favorite:{
-                addMovieDetailToDatabase();
-                break;
-            }
+//            case R.id.menu_item_favorite:{
+//                return true;
+//            }
             case R.id.action_settings:
                 return true;
 
@@ -361,13 +366,36 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(mAdapter);
         movie = getActivity().getIntent().getParcelableExtra("movieTag");
+        sharedPrefMovieList = getContext().getSharedPreferences(MovieUtils.FAVORITE_LIST, Context.MODE_PRIVATE);
+        if(sharedPrefMovieList.getBoolean(Long.toString(movie.getId()),false)){
+            fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_white_24dp));
+        }
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(MovieUtils.FAVORITE_FLAG || sharedPrefMovieList.getBoolean(Long.toString(movie.getId()),false)) {
+                    deleteMovieDetailsFromDatabase();
+                    fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_border_white_24dp));
+                    Snackbar.make(view, "Removed From Favorite", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+
+                }else {
+                    addMovieDetailToDatabase();
+                    fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_white_24dp));
+                    Snackbar.make(view, "Saved to Favorite", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                }
+
+            }
+        });
+
         if(!MovieUtils.FAVORITE_FLAG){
             if(savedInstanceState==null
                     || ! savedInstanceState.containsKey(SAVED_VIDEO_LIST)
                     || ! savedInstanceState.containsKey(SAVED_REVIEW_LIST)  ){
                 updateMovieDetailView();
             }else{
-                Log.i(LOG_TAG,"Retaining from Saved instances ");
+                //Log.i(LOG_TAG,"Retaining from Saved instances ");
                 videos = savedInstanceState.getParcelableArrayList(SAVED_VIDEO_LIST);
                 reviews = savedInstanceState.getParcelableArrayList(SAVED_REVIEW_LIST);
                 casts = savedInstanceState.getParcelableArrayList(SAVED_CAST_LIST);
@@ -380,7 +408,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
     }
 
     private void configureMovieItemList(){
-        Log.i(LOG_TAG,"Configuring with "+videos.size()+" Videos and "+reviews.size() + " reviews ");
+        //Log.i(LOG_TAG,"Configuring with "+videos.size()+" Videos and "+reviews.size() + " reviews ");
 
         SectionDataModel similarMoviesSection = new SectionDataModel();
         SectionDataModel castSection = new SectionDataModel();
@@ -413,7 +441,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
         Log.i(LOG_TAG,"Movie Inserted with rowId : " + movieRowId +"\n"+videoRowInserted +" Videos Inserted \n"+ reviewRowInserted + " Reviews Inserted");
         saveMoviePosters();
         saveVideoThumbnails();
-        Log.i(LOG_TAG,"Images Related to movie Details are saved");
+        sharedPrefMovieList.edit().putBoolean(Long.toString(movie.getId()),true).apply();
     }
 
     public void saveMoviePosters(){
@@ -508,16 +536,34 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
 
     public void deleteMovieDetailsFromDatabase(){
         long movieRowId = MovieUtils.getMovieRowFromDatabase(getContext(),movie.getId());
-        int movieRowsDeleted = MovieUtils.deleteMovieFromFavorite(getContext(),movieRowId);
+        deleteVideoThumbnails();
+        deleteMoviePosters();
         int videoRowsDeleted = MovieUtils.deleteVideosFromDatabase(getContext(),movieRowId);
         int reviewRowsDeleted = MovieUtils.deleteReviewsFromDatabase(getContext(),movieRowId);
-        Log.i(LOG_TAG,movieRowsDeleted +" Movie rows deleted\n"+videoRowsDeleted+ " Video rows deleted\n"+reviewRowsDeleted+ " Review rows Deleted");
+        int movieRowsDeleted = MovieUtils.deleteMovieFromFavorite(getContext(),movieRowId);
+        sharedPrefMovieList.edit().remove(Long.toString(movie.getId())).apply();
+        if(MovieUtils.FAVORITE_FLAG) getActivity().onBackPressed();
+        //Log.i(LOG_TAG,movieRowsDeleted +" Movie rows deleted\n"+videoRowsDeleted+ " Video rows deleted\n"+reviewRowsDeleted+ " Review rows Deleted");
+    }
+
+    public void deleteMoviePosters(){
+        File poster = new File( getContext().getFilesDir().getPath() + "/moviePoster/"+movie.getPosterPath());
+        File backdropPoster = new File( getContext().getFilesDir().getPath() + "/moviePoster/"+movie.getBackdropPath());
+        if(poster.delete()) Log.i(LOG_TAG,"Poster Deleted");
+        if(backdropPoster.delete()) Log.i(LOG_TAG,"Backdrop Poster Deleted");
+    }
+
+    public void deleteVideoThumbnails(){
+        for(Video video : videos) {
+            File videoThumbnail = new File(getContext().getFilesDir().getPath() + "/videoPoster/" + video.getKey() + ".jpg");
+            if(videoThumbnail.delete()) Log.i(LOG_TAG,"Video Thumbnail Deleted ");
+        }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        Log.i(LOG_TAG,"Saving instances before destroying the activity");
+        //Log.i(LOG_TAG,"Saving instances before destroying the activity");
         if(videos !=null && reviews != null && casts !=null && similarMovies !=null){
             outState.putParcelableArrayList(SAVED_VIDEO_LIST,videos);
             outState.putParcelableArrayList(SAVED_REVIEW_LIST,reviews);

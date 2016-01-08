@@ -279,6 +279,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
 */
     private void updateMoviePoster(){
         load = false;
+
         MovieApiService moviesApiService = MovieUtils.retrofitInstance.create(MovieApiService.class);
         Call<JsonRequestDiscoverMovieResult> call = moviesApiService.getDiscoverMovieFeed(
                 sortBy,
@@ -295,8 +296,6 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
                     movieArrayList.addAll(results);
                     Log.i(LOG_TAG,"Making Request to network with page id " + page
                             +"\nMovie Array list contains :" + movieArrayList.size());
-
-                    //if(page ==1) movieAdapter.clear();
                     movieAdapter.addAll(results);
 
                 }else{

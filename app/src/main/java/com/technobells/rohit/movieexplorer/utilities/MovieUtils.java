@@ -34,8 +34,10 @@ public class MovieUtils {
     public static final String BASE_URL_IMAGE= "http://image.tmdb.org/t/p/";
     public static final String BASE_URL_VIDEO_THUMBNAIL = "http://img.youtube.com/vi/";
     public static final String MIN_VOTE_COUNT = "1000";
+    public static final String FAVORITE_LIST = "FavoriteMovieList";
     public static float SCREEN_DENSITY =1;
     public static boolean FAVORITE_FLAG = false;
+
 
     public static final int MOVIE_DETAIL = 10 ;//Don't change the values as they represent the no. of column in cursor
     public static final int VIDEO = 9; //Don't change the values as they represent the no. of column in cursor
@@ -107,7 +109,6 @@ public class MovieUtils {
         Log.i(LOG_TAG,"Inside getMovieFromCursor(), with cursor position : "+ pos);
 
         if(cursor.moveToPosition(pos)) {
-
 
             movie.setId(cursor.getLong(MovieUtils.COL_MOVIE_TMDB_MOVIE_ID));
             movie.setTitle(cursor.getString(MovieUtils.COL_MOVIE_TITLE));
@@ -331,7 +332,7 @@ public class MovieUtils {
 
         return mContext.getContentResolver().delete(
                 FavoriteMoviesContract.MovieEntry.CONTENT_URI,
-                FavoriteMoviesContract.MovieEntry.COLUMN_TMDB_MOVIE_ID +" = ? ",
+                FavoriteMoviesContract.MovieEntry._ID +" = ? ",
                 new String[]{Long.toString(movieRowId)}
         );
     }

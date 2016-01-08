@@ -34,11 +34,13 @@ public interface MovieApiService {
 
     @GET("movie/{id}/similar")
     Call<JsonRequestDiscoverMovieResult> getSimilarMovieFeed(@Path("id") String movieId,
-                                                        @Query("api_key") String apiKey);
+                                                             @Query("api_key") String apiKey
+    );
 
     @GET("movie/{id}/credits")
     Call<JsonRequestMovieCreditsResult> getMovieCreditsFeed(@Path("id") String movieId,
-                                                            @Query("api_key") String apiKey);
+                                                            @Query("api_key") String apiKey
+    );
 
 
 }

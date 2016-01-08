@@ -118,7 +118,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             return movieItems.size();
         }
     }
-    
+
     public int getActualPositionInCursor(int pos){
         if(pos==0) return 0;
         else if(pos<= videoCursor.getCount()) return pos -1;
@@ -577,7 +577,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         Movie movie;
         if (MovieUtils.FAVORITE_FLAG){
-
             movie = MovieUtils.getMovieFromCursor(getCursorAtPosition(pos),getActualPositionInCursor(pos));
         }else movie= (Movie) movieItems.get(pos);
 
