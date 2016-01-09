@@ -346,22 +346,23 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
-        int id = item.getItemId();
-        switch (id){
-//            case R.id.menu_item_favorite:{
+//        int id = item.getItemId();
+//        switch (id){
+////            case R.id.menu_item_favorite:{
+////                return true;
+////            }
+//            case R.id.action_settings:
 //                return true;
-//            }
-            case R.id.action_settings:
-                return true;
-
-        }
+//
+//        }
         return super.onOptionsItemSelected(item);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_movie_detail, container, false);
+        View rootView  = inflater.inflate(R.layout.fragment_movie_detail, container, false);
+
         ButterKnife.bind(this, rootView);
         mAdapter = new MovieDetailAdapter(getActivity());
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -406,9 +407,18 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                 if (savedInstanceState == null
                         || !savedInstanceState.containsKey(SAVED_VIDEO_LIST)
                         || !savedInstanceState.containsKey(SAVED_REVIEW_LIST)) {
-                    updateMovieDetailView();
+
+                    Log.i(LOG_TAG,"Saved Instances are null");
+                    if(videos.size() > 0 && casts.size() > 0 && similarMovies.size() > 0){
+                        Log.i(LOG_TAG,"Instance Variable are alive ");
+                        configureMovieItemList();
+                    }else {
+                        Log.i(LOG_TAG,"Unable to retain Instance Variable");
+                        updateMovieDetailView();
+                    }
+
                 } else {
-                    //Log.i(LOG_TAG,"Retaining from Saved instances ");
+                    Log.i(LOG_TAG,"Retaining from Saved instances ");
                     videos = savedInstanceState.getParcelableArrayList(SAVED_VIDEO_LIST);
                     reviews = savedInstanceState.getParcelableArrayList(SAVED_REVIEW_LIST);
                     casts = savedInstanceState.getParcelableArrayList(SAVED_CAST_LIST);
@@ -556,7 +566,15 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
         int reviewRowsDeleted = MovieUtils.deleteReviewsFromDatabase(getContext(),movieRowId);
         int movieRowsDeleted = MovieUtils.deleteMovieFromFavorite(getContext(),movieRowId);
         sharedPrefMovieList.edit().remove(Long.toString(movie.getId())).apply();
-        if(FAVORITE) getActivity().onBackPressed();
+        if(FAVORITE){
+            Log.i(LOG_TAG,"Pressing Back Button");
+
+            if(MovieUtils.TWO_PANE){
+                getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
+            }else {
+                getActivity().onBackPressed();
+            }
+        }
         //Log.i(LOG_TAG,movieRowsDeleted +" Movie rows deleted\n"+videoRowsDeleted+ " Video rows deleted\n"+reviewRowsDeleted+ " Review rows Deleted");
     }
 

@@ -16,10 +16,9 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         if(getResources().getBoolean(R.bool.twoPane)){
             mTwoPane = true;
-
+            MovieUtils.TWO_PANE = true;
             if(savedInstanceState == null){
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.movie_detail_fragment,new MovieDetailActivityFragment(),"DFTAG")
@@ -36,12 +35,12 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
     }
 
     @Override
-    public void onItemSelected(Movie movie){
+    public void onItemSelected(Movie movie,boolean FavState){
 
         if(mTwoPane){
             Bundle args = new Bundle();
             args.putParcelable("movieTag",movie);
-            args.putBoolean("FavFlag", MovieUtils.FAVORITE_FLAG);
+            args.putBoolean("FavFlag", FavState);
             MovieDetailActivityFragment fragment = new MovieDetailActivityFragment();
             fragment.setArguments(args);
             getSupportFragmentManager().beginTransaction()
@@ -52,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
         }else {
             Intent intent = new Intent(this,MovieDetailActivity.class);
             intent.putExtra("movieTag",movie);
-            intent.putExtra("FavFlag",MovieUtils.FAVORITE_FLAG);
+            intent.putExtra("FavFlag",FavState);
             startActivity(intent);
         }
     }

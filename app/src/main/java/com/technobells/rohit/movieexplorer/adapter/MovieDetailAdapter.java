@@ -549,7 +549,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     public static class HeaderViewHolder extends RecyclerView.ViewHolder {
-
         @Bind(R.id.header_item_title)
         TextView title;
 
@@ -595,8 +594,8 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         holder.title.setText(movie.getTitle());
         holder.releaseDate.setText(MovieUtils.formateDate(movie.getReleaseDate(),"yyyy-MM-dd","MMM, yyyy"));
-        holder.rating.setText(String.format("%.1f",movie.getVoteAverage()));
-        holder.voteCount.setText(Long.toString(movie.getVoteCount()));
+        holder.rating.setText(String.format("%.1f",movie.getVoteAverage()) + "/");
+        holder.voteCount.setText("Voted By "+Long.toString(movie.getVoteCount()) + " people");
         holder.plotSummary.setText(movie.getOverview());
 
     }

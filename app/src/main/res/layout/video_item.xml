@@ -29,7 +29,10 @@
                 android:id="@+id/video_item_share_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="4dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:paddingRight="16dp"
+                android:paddingLeft="10dp"
                 android:src="@drawable/ic_share_black_36dp"
                 />
 
@@ -88,7 +91,7 @@
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingRight="5dp"
+                android:paddingRight="10dp"
                 android:paddingLeft="5dp"
                 android:adjustViewBounds="true"
                 android:src="@drawable/ic_youtube_36"/>

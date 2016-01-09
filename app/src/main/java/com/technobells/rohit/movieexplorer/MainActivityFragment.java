@@ -49,13 +49,15 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
     private String SAVED_MOVIE_LIST = "savedMovieList";
     private String SAVED_SORT_PREF = "savedSortPref";
     private String SAVED_PAGE_NO = "page";
+    private String SAVED_FAV_STATE = "favClickedState";
     private final int MOVIE_LOADER = 0;
-    private boolean favoriteClicked = false;
+    public static boolean favoriteState = false;
     private MovieAdapter movieAdapter;
     private ArrayList<Movie> movieArrayList= new ArrayList<>();
     private String sortBy = "popularity.desc"; //Default sorting order
     private String sortOrder = FavoriteMoviesContract.MovieEntry.COLUMN_POPULARITY + " DESC ";// for database sorting.
     private int page = 1;
+    private MenuItem favoriteMenuItem;
 
     @Bind(R.id.fragmen_main_grid_recycler_view)
     RecyclerView recyclerView;
@@ -66,7 +68,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
     }
 
     public interface CallBack{
-        public void onItemSelected(Movie movie);
+        public void onItemSelected(Movie movie, boolean FavState);
     }
 
     @Override
@@ -116,7 +118,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener(){
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx,int dy){
-                if(dy>0 && load && !MovieUtils.FAVORITE_FLAG){///vertical scroll check for downward scroll
+                if(dy>0 && load && !MainActivityFragment.favoriteState){///vertical scroll check for downward scroll
                     if(gridLayoutManager.getChildCount() + gridLayoutManager.findFirstVisibleItemPosition()
                             >= gridLayoutManager.getItemCount() ){
                         page++;
@@ -126,7 +128,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
             }
         });
 
-        if(MovieUtils.FAVORITE_FLAG) getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
+        if(MainActivityFragment.favoriteState) getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
         if(savedInstanceState==null
                 || ! savedInstanceState.containsKey(SAVED_MOVIE_LIST)
                 || ! savedInstanceState.containsKey(SAVED_SORT_PREF)
@@ -138,6 +140,8 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
             movieAdapter.addAll( movieArrayList);
             sortBy=savedInstanceState.getString(SAVED_SORT_PREF);
             page = savedInstanceState.getInt(SAVED_PAGE_NO);
+            favoriteState = savedInstanceState.getBoolean(SAVED_FAV_STATE);
+
         }
 
 
@@ -155,6 +159,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         // Inflate the menu; this adds items to the action bar if it is present.
         inflater.inflate(R.menu.menu_main, menu);
+        favoriteMenuItem = menu.findItem(R.id.menu_item_favorite);
     }
 
     @Override
@@ -170,12 +175,14 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
 
         switch(id){
            case R.id.menu_item_favorite:
-                favoriteClicked = true;
-                if( !MovieUtils.FAVORITE_FLAG ){
-                    MovieUtils.FAVORITE_FLAG = true;
+
+                if( !favoriteState ){
+                    favoriteState = true;
+                    favoriteMenuItem.setIcon(R.drawable.ic_favorite_white_24dp);
                     showFavoriteMovies();
                 } else{
-                    MovieUtils.FAVORITE_FLAG = false;
+                    favoriteState = false;
+                    favoriteMenuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
                     showAllMovies();
                 }
                 return true;
@@ -183,7 +190,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
             case R.id.action_sort_by_popularity:
                 if(sortBy.equals(sortByRating)){
                     sortBy=sortByPopularity;
-                    if(MovieUtils.FAVORITE_FLAG){
+                    if(MainActivityFragment.favoriteState){
                         sortOrder = FavoriteMoviesContract.MovieEntry.COLUMN_POPULARITY + " DESC ";
                         getLoaderManager().restartLoader(MOVIE_LOADER,null,this);
                     }else {
@@ -198,7 +205,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
             case R.id.action_sort_by_rating:
                 if(sortBy.equals(sortByPopularity)) {
                     sortBy=sortByRating;
-                    if(MovieUtils.FAVORITE_FLAG){
+                    if(MainActivityFragment.favoriteState){
                         sortOrder = FavoriteMoviesContract.MovieEntry.COLUMN_VOTE_AVERAGE + " DESC ";
                         getLoaderManager().restartLoader(MOVIE_LOADER,null,this);
                     }else {
@@ -216,7 +223,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
     }
 
     public void showFavoriteMovies(){
-        if(!favoriteClicked)getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+        if(!favoriteState)getLoaderManager().initLoader(MOVIE_LOADER, null, this);
         getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
     }
 
@@ -257,10 +264,8 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {}
 
+    //Fetch data from internet on onCreate Activity or whenever is required
 
-    /*
-  Fetch data from internet on onCreate Activity or whenever is required
-*/
     private void updateMoviePoster(){
         load = false;
 
@@ -308,8 +313,6 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
 
     }
 
-
-
     @Override
     public void onSaveInstanceState(Bundle saveState){
         super.onSaveInstanceState(saveState);
@@ -317,6 +320,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
         if(movieArrayList !=null) saveState.putParcelableArrayList(SAVED_MOVIE_LIST, movieArrayList);
         saveState.putString(SAVED_SORT_PREF,sortBy);
         saveState.putInt(SAVED_PAGE_NO,page);
+        saveState.putBoolean(SAVED_FAV_STATE, favoriteState);
     }
 
 }

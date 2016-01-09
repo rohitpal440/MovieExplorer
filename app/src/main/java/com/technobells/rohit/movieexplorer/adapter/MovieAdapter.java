@@ -122,7 +122,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         final Movie movie;
-        if (MovieUtils.FAVORITE_FLAG){
+        if (MainActivityFragment.favoriteState){
             mCursor.moveToPosition(position);
             movie = MovieUtils.getMovieFromCursor(mCursor, position);
         }else{
@@ -136,7 +136,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
         final String SIZE="w185/";
         //Glide.with(mContext).load( MovieUtils.BASE_URL_IMAGE+ SIZE + movie.getPosterPath()).into(holder.posterImage);
         holder.posterImage.setAdjustViewBounds(true);
-        if(MovieUtils.FAVORITE_FLAG) {
+        if(MainActivityFragment.favoriteState) {
             Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getPosterPath())).placeholder(R.drawable.placeholder).into(holder.posterImage);
         }else {
             Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + SIZE + movie.getPosterPath()).placeholder(R.drawable.placeholder).into(holder.posterImage);
@@ -149,7 +149,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
                             Toast.LENGTH_SHORT).show();
                 }else{
 
-                    ((MainActivityFragment.CallBack)mActivity).onItemSelected(movie);
+                    ((MainActivityFragment.CallBack)mActivity).onItemSelected(movie,MainActivityFragment.favoriteState);
                 }
             }
         });
@@ -158,7 +158,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
 
     @Override
     public int getItemCount() {
-        if(!MovieUtils.FAVORITE_FLAG) return movies.size();
+        if(!MainActivityFragment.favoriteState) return movies.size();
         if(mDataValid && mCursor !=null){
             return mCursor.getCount();
         }
@@ -167,7 +167,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
 
     @Override
     public void setHasStableIds(boolean hasStableIds){
-        if(MovieUtils.FAVORITE_FLAG){
+        if(MainActivityFragment.favoriteState){
             super.setHasStableIds(true);
         }else {
             super.setHasStableIds(false);
@@ -176,7 +176,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
 
     @Override
     public long getItemId(int position){
-        if(!MovieUtils.FAVORITE_FLAG) return -1;
+        if(!MainActivityFragment.favoriteState) return -1;
         if(mDataValid && mCursor != null && mCursor.moveToPosition(position)){
             return mCursor.getLong(mRowIdColumn);
         }

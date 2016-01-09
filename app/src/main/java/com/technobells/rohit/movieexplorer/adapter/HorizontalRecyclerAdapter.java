@@ -40,7 +40,7 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
     public HorizontalRecyclerAdapter(Context mContext,ArrayList<Object> list){
         this.mContext = mContext;
         itemsConnectedtoMovie.addAll(list);
-        notifyItemRangeInserted(itemsConnectedtoMovie.size() -list.size(),itemsConnectedtoMovie.size());
+        notifyItemRangeInserted(itemsConnectedtoMovie.size() - list.size(),itemsConnectedtoMovie.size());
     }
 
     public void addAll(ArrayList<Object> objects){
@@ -85,7 +85,7 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
                     //do something
                     //Toast.makeText(context,"You clicked the similar Movies",Toast.LENGTH_SHORT).show();
                     if(context.getResources().getBoolean(R.bool.twoPane)){
-                        ((MainActivityFragment.CallBack) context).onItemSelected(movie);
+                        ((MainActivityFragment.CallBack) context).onItemSelected(movie,MovieDetailActivityFragment.FAVORITE);
                     }else {
                         Intent intent = new Intent(context, MovieDetailActivity.class);
                         intent.putExtra("movieTag", movie);

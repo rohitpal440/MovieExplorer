@@ -37,6 +37,7 @@ public class MovieUtils {
     public static final String FAVORITE_LIST = "FavoriteMovieList";
     public static float SCREEN_DENSITY =1;
     public static boolean FAVORITE_FLAG = false;
+    public static boolean TWO_PANE = false;
 
     public static final int MOVIE_DETAIL = 10 ;//Don't change the values as they represent the no. of column in cursor
     public static final int VIDEO = 9; //Don't change the values as they represent the no. of column in cursor

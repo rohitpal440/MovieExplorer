@@ -15,7 +15,7 @@ public class MovieDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_movie_detail);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         if(savedInstanceState == null){
             Bundle args = new Bundle();
             Intent intent = getIntent();
@@ -23,6 +23,7 @@ public class MovieDetailActivity extends AppCompatActivity {
             Boolean Fav = intent.getBooleanExtra("FavFlag",false);
             args.putParcelable("movieTag",movie);
             args.putBoolean("FavFlag",Fav);
+            getSupportActionBar().setTitle(movie.getTitle());
             MovieDetailActivityFragment fragment = new MovieDetailActivityFragment();
             fragment.setArguments(args);
             getSupportFragmentManager().beginTransaction()
@@ -30,5 +31,4 @@ public class MovieDetailActivity extends AppCompatActivity {
                     .commit();
         }
     }
-
 }

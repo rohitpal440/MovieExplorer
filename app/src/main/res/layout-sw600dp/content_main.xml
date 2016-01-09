@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="horizontal"
     android:baselineAligned="false"
+    android:layout_marginTop="?attr/actionBarSize"
     android:divider="?android:attr/dividerHorizontal"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity">
