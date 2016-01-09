@@ -160,6 +160,9 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
         // Inflate the menu; this adds items to the action bar if it is present.
         inflater.inflate(R.menu.menu_main, menu);
         favoriteMenuItem = menu.findItem(R.id.menu_item_favorite);
+        if(favoriteState){
+            favoriteMenuItem.setIcon(R.drawable.ic_favorite_white_24dp);
+        }
     }
 
     @Override

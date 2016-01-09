@@ -323,7 +323,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        if(FAVORITE){
+        if(FAVORITE && movie != null){
             //Log.i(LOG_TAG,"Inside onActivityCreated(), Setting up the loaders");
 
             getLoaderManager().initLoader(MOVIE_LOADER, null, this);
