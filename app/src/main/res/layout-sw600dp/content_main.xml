@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:baselineAligned="false"
+    android:divider="?android:attr/dividerHorizontal"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity">
+
+    <fragment
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:id="@+id/fragment_grid"
+        android:name="com.technobells.rohit.movieexplorer.MainActivityFragment"
+        android:layout_weight="2"
+        tools:layout="@layout/fragment_main"
+        />
+
+    <FrameLayout
+        android:id="@+id/movie_detail_fragment"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="3" />
+
+</LinearLayout>

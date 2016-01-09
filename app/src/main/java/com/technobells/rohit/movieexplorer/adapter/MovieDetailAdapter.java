@@ -23,6 +23,7 @@ import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubeStandalonePlayer;
 import com.squareup.picasso.Picasso;
 import com.technobells.rohit.movieexplorer.BuildConfig;
+import com.technobells.rohit.movieexplorer.MovieDetailActivityFragment;
 import com.technobells.rohit.movieexplorer.R;
 import com.technobells.rohit.movieexplorer.model.SectionDataModel;
 import com.technobells.rohit.movieexplorer.model.Movie;
@@ -111,7 +112,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     @Override
     public int getItemCount(){
-        if(MovieUtils.FAVORITE_FLAG){
+        if(MovieDetailActivityFragment.FAVORITE){
             return getMovieItemCusorCount();
 
         }else {
@@ -272,7 +273,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     @Override
     public void setHasStableIds(boolean hasStableIds) {
-        if(MovieUtils.FAVORITE_FLAG)super.setHasStableIds(true);
+        if(MovieDetailActivityFragment.FAVORITE)super.setHasStableIds(true);
         else super.setHasStableIds(false);
     }
 
@@ -310,7 +311,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     @Override
     public long getItemId(int position) {
-        if(!MovieUtils.FAVORITE_FLAG) return -1;
+        if(!MovieDetailActivityFragment.FAVORITE) return -1;
         Cursor cursor = getCursorAtPosition(position);
         if (mDataValid && getItemCount() != 0 && cursor != null) {
             //switch (getExtra(cursor)){
@@ -328,7 +329,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     @Override
     public int getItemViewType(int position){
-        if(MovieUtils.FAVORITE_FLAG){
+        if(MovieDetailActivityFragment.FAVORITE){
            // return getExtra(getCursorAtPosition(position));
             return getCursorAtPosition(position).getColumnCount();
         }else {
@@ -576,14 +577,14 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public void configureMovieDetailViewHolder(MovieDetailViewHolder holder,int pos){
 
         Movie movie;
-        if (MovieUtils.FAVORITE_FLAG){
+        if (MovieDetailActivityFragment.FAVORITE){
             movie = MovieUtils.getMovieFromCursor(getCursorAtPosition(pos),getActualPositionInCursor(pos));
         }else movie= (Movie) movieItems.get(pos);
 
         /* Possible Image size are "w92", "w154", "w185", "w342", "w500", "w780", or "original" */
         //final String SIZE="w185/";
         holder.posterImage.setAdjustViewBounds(true);
-        if(MovieUtils.FAVORITE_FLAG){
+        if(MovieDetailActivityFragment.FAVORITE){
             Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getPosterPath())).fit().placeholder(R.drawable.placeholder).into(holder.posterImage);
             Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getBackdropPath())).placeholder(R.drawable.loading_placeholder).into(holder.backDropPoster);
 
@@ -602,13 +603,13 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     public void configureVideoViewHolder(VideoViewHolder holder,int pos){
         Video video;
-        if(MovieUtils.FAVORITE_FLAG){
+        if(MovieDetailActivityFragment.FAVORITE){
             video = MovieUtils.getVideoFromCursor(getCursorAtPosition(pos),getActualPositionInCursor(pos));
         }else {
             video = (Video) movieItems.get(pos);
         }
         final String QUALITY = "/hqdefault.jpg";
-        if(MovieUtils.FAVORITE_FLAG){
+        if(MovieDetailActivityFragment.FAVORITE){
             Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/videoPoster/"+video.getKey()+".jpg")).placeholder(R.drawable.grey_placeholder)
                     .into(holder.poster);
         }else {
@@ -621,7 +622,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         holder.lang.setText(video.getIso6391());
         holder.setVideoId(video.getKey());
         String movieName;
-        if(MovieUtils.FAVORITE_FLAG){
+        if(MovieDetailActivityFragment.FAVORITE){
             movieName = movieCursor.getString(MovieUtils.COL_MOVIE_TITLE);
         }else {
             Movie movie = (Movie) movieItems.get(0);
@@ -632,7 +633,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     public void configureReviewViewHolder(ReviewViewHolder holder,int pos){
         Review review;
-        if(MovieUtils.FAVORITE_FLAG){
+        if(MovieDetailActivityFragment.FAVORITE){
             review = MovieUtils.getReviewFromCursor(getCursorAtPosition(pos),getActualPositionInCursor(pos));
         }else {
             review = (Review) movieItems.get(pos);

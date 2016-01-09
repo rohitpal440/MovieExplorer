@@ -1,11 +1,11 @@
 package com.technobells.rohit.movieexplorer;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
+
+import com.technobells.rohit.movieexplorer.model.Movie;
 
 public class MovieDetailActivity extends AppCompatActivity {
 
@@ -15,15 +15,20 @@ public class MovieDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_movie_detail);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if(savedInstanceState == null){
+            Bundle args = new Bundle();
+            Intent intent = getIntent();
+            Movie movie = intent.getParcelableExtra("movieTag");
+            Boolean Fav = intent.getBooleanExtra("FavFlag",false);
+            args.putParcelable("movieTag",movie);
+            args.putBoolean("FavFlag",Fav);
+            MovieDetailActivityFragment fragment = new MovieDetailActivityFragment();
+            fragment.setArguments(args);
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.movie_detail_fragment,fragment)
+                    .commit();
+        }
     }
 
 }

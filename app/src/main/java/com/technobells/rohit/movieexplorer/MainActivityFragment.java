@@ -65,6 +65,9 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
     public MainActivityFragment() {
     }
 
+    public interface CallBack{
+        public void onItemSelected(Movie movie);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -78,10 +81,15 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
         MovieUtils.SCREEN_DENSITY = metrics.density;
         int columnCount = (metrics.widthPixels/(int)getResources().getDimension(R.dimen.movie_card_width_in_grid));
+        Log.i(LOG_TAG,"Screen Density : " + metrics.density
+                                    +"\nColumn width in Resources :" + getResources().getDimension(R.dimen.movie_card_width_in_grid)
+                                    +"\n Calculated Column Count :" + columnCount
+                                    +"\nWidth Pixels are :" + metrics.widthPixels
+        );
         final GridLayoutManager gridLayoutManager =
                 new GridLayoutManager(getContext(),columnCount>2?columnCount:2);
 
-        movieAdapter = new MovieAdapter(getContext());
+        movieAdapter = new MovieAdapter(getActivity());
         ButterKnife.bind(this,rootView);
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -118,30 +126,6 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
             }
         });
 
-//        MaterialFavoriteButton toolbarFavorite = new MaterialFavoriteButton.Builder(getActivity())
-//                .favorite(MovieUtils.FAVORITE_FLAG)
-//                .color(MaterialFavoriteButton.STYLE_WHITE)
-//                .type(MaterialFavoriteButton.STYLE_HEART)
-//                .bounceDuration(200)
-//                .create();
-//
-//
-//        getActivity().getActionBar().addView(toolbarFavorite);
-//        toolbarFavorite.setOnFavoriteChangeListener(
-//                new MaterialFavoriteButton.OnFavoriteChangeListener(){
-//                    @Override
-//                    public void onFavoriteChanged(MaterialFavoriteButton button,boolean favorite){
-//                        favoriteClicked = true;
-//                        if( !MovieUtils.FAVORITE_FLAG ){
-//                            MovieUtils.FAVORITE_FLAG = true;
-//                            showFavoriteMovies();
-//                        } else{
-//                            MovieUtils.FAVORITE_FLAG = false;
-//                            showAllMovies();
-//                        }
-//                    }
-//                }
-//        );
         if(MovieUtils.FAVORITE_FLAG) getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
         if(savedInstanceState==null
                 || ! savedInstanceState.containsKey(SAVED_MOVIE_LIST)

@@ -72,6 +72,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
     private final int MOVIE_LOADER =0;
     private final int VIDEO_LOADER =1;
     private final int REVIEW_LOADER = 2;
+    public static boolean FAVORITE = false;
 
     private final String SAVED_MOVIE_ITEM = "movieItem";
     private final String SAVED_VIDEO_LIST = "videos";
@@ -248,7 +249,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                         Log.e(LOG_TAG,"Retrofit Similar Movies Response error : "+str);
 
                     }catch (IOException e){
-                        Log.e(LOG_TAG,"IOexception inside the response");
+                        Log.e(LOG_TAG,"IOException inside the response");
                     }
                 }
 
@@ -322,7 +323,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        if(MovieUtils.FAVORITE_FLAG){
+        if(FAVORITE){
             //Log.i(LOG_TAG,"Inside onActivityCreated(), Setting up the loaders");
 
             getLoaderManager().initLoader(MOVIE_LOADER, null, this);
@@ -361,50 +362,63 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_movie_detail, container, false);
-        ButterKnife.bind(this,rootView);
+        ButterKnife.bind(this, rootView);
         mAdapter = new MovieDetailAdapter(getActivity());
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(mAdapter);
-        movie = getActivity().getIntent().getParcelableExtra("movieTag");
+        //movie = getActivity().getIntent().getParcelableExtra("movieTag");
+        Bundle args = getArguments();
+        if(args != null){
+            movie = args.getParcelable("movieTag");
+            FAVORITE = args.getBoolean("FavFlag");
+        }else{
+            Log.e(LOG_TAG,"Got NULL Bundle");
+            fab.hide();
+        }
+
+        Log.i(LOG_TAG,"Inside Detail Activity");
         sharedPrefMovieList = getContext().getSharedPreferences(MovieUtils.FAVORITE_LIST, Context.MODE_PRIVATE);
-        if(sharedPrefMovieList.getBoolean(Long.toString(movie.getId()),false)){
-            fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_white_24dp));
-        }
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(MovieUtils.FAVORITE_FLAG || sharedPrefMovieList.getBoolean(Long.toString(movie.getId()),false)) {
-                    deleteMovieDetailsFromDatabase();
-                    fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_border_white_24dp));
-                    Snackbar.make(view, "Removed From Favorite", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
+        if (movie != null) {
+            //fab.show();
+            if (sharedPrefMovieList.getBoolean(Long.toString(movie.getId()), false)) {
+                fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_white_24dp));
+            }
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (FAVORITE || sharedPrefMovieList.getBoolean(Long.toString(movie.getId()), false)) {
+                        deleteMovieDetailsFromDatabase();
+                        fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_border_white_24dp));
+                        Snackbar.make(view, "Removed From Favorite", Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show();
 
-                }else {
-                    addMovieDetailToDatabase();
-                    fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_white_24dp));
-                    Snackbar.make(view, "Saved to Favorite", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
+                    } else {
+                        addMovieDetailToDatabase();
+                        fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_white_24dp));
+                        Snackbar.make(view, "Saved to Favorite", Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show();
+                    }
+
                 }
+            });
 
-            }
-        });
-
-        if(!MovieUtils.FAVORITE_FLAG){
-            if(savedInstanceState==null
-                    || ! savedInstanceState.containsKey(SAVED_VIDEO_LIST)
-                    || ! savedInstanceState.containsKey(SAVED_REVIEW_LIST)  ){
-                updateMovieDetailView();
-            }else{
-                //Log.i(LOG_TAG,"Retaining from Saved instances ");
-                videos = savedInstanceState.getParcelableArrayList(SAVED_VIDEO_LIST);
-                reviews = savedInstanceState.getParcelableArrayList(SAVED_REVIEW_LIST);
-                casts = savedInstanceState.getParcelableArrayList(SAVED_CAST_LIST);
-                similarMovies = savedInstanceState.getParcelableArrayList(SAVED_SIMILAR_MOVIES_LIST);
-                configureMovieItemList();
+            if (!FAVORITE) {
+                if (savedInstanceState == null
+                        || !savedInstanceState.containsKey(SAVED_VIDEO_LIST)
+                        || !savedInstanceState.containsKey(SAVED_REVIEW_LIST)) {
+                    updateMovieDetailView();
+                } else {
+                    //Log.i(LOG_TAG,"Retaining from Saved instances ");
+                    videos = savedInstanceState.getParcelableArrayList(SAVED_VIDEO_LIST);
+                    reviews = savedInstanceState.getParcelableArrayList(SAVED_REVIEW_LIST);
+                    casts = savedInstanceState.getParcelableArrayList(SAVED_CAST_LIST);
+                    similarMovies = savedInstanceState.getParcelableArrayList(SAVED_SIMILAR_MOVIES_LIST);
+                    configureMovieItemList();
+                }
             }
         }
-
         return rootView;
+
     }
 
     private void configureMovieItemList(){
@@ -542,7 +556,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
         int reviewRowsDeleted = MovieUtils.deleteReviewsFromDatabase(getContext(),movieRowId);
         int movieRowsDeleted = MovieUtils.deleteMovieFromFavorite(getContext(),movieRowId);
         sharedPrefMovieList.edit().remove(Long.toString(movie.getId())).apply();
-        if(MovieUtils.FAVORITE_FLAG) getActivity().onBackPressed();
+        if(FAVORITE) getActivity().onBackPressed();
         //Log.i(LOG_TAG,movieRowsDeleted +" Movie rows deleted\n"+videoRowsDeleted+ " Video rows deleted\n"+reviewRowsDeleted+ " Review rows Deleted");
     }
 

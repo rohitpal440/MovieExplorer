@@ -12,7 +12,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
+import com.technobells.rohit.movieexplorer.MainActivityFragment;
 import com.technobells.rohit.movieexplorer.MovieDetailActivity;
+import com.technobells.rohit.movieexplorer.MovieDetailActivityFragment;
 import com.technobells.rohit.movieexplorer.R;
 import com.technobells.rohit.movieexplorer.model.Cast;
 import com.technobells.rohit.movieexplorer.model.Movie;
@@ -82,9 +84,14 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
                 public void onClick(View v) {
                     //do something
                     //Toast.makeText(context,"You clicked the similar Movies",Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(context,MovieDetailActivity.class);
-                    intent.putExtra("movieTag",movie);
-                    v.getContext().startActivity(intent);
+                    if(context.getResources().getBoolean(R.bool.twoPane)){
+                        ((MainActivityFragment.CallBack) context).onItemSelected(movie);
+                    }else {
+                        Intent intent = new Intent(context, MovieDetailActivity.class);
+                        intent.putExtra("movieTag", movie);
+                        intent.putExtra("FavFlag", MovieDetailActivityFragment.FAVORITE);
+                        v.getContext().startActivity(intent);
+                    }
                 }
             });
         }

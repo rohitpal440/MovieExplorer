@@ -1,5 +1,6 @@
 package com.technobells.rohit.movieexplorer.adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -14,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
+import com.technobells.rohit.movieexplorer.MainActivityFragment;
 import com.technobells.rohit.movieexplorer.utilities.ItemClickListener;
 import com.technobells.rohit.movieexplorer.MovieDetailActivity;
 import com.technobells.rohit.movieexplorer.R;
@@ -38,8 +40,10 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
     private int mRowIdColumn = MovieUtils.COL_MOVIE_ID;
     private Cursor mCursor;
     private DataSetObserver mDataSetObserver;
-    public MovieAdapter(Context context){
-        this.mContext = context;
+    private Activity mActivity;
+    public MovieAdapter(Activity activity){
+        this.mContext = activity;
+        mActivity= activity;
         movies = new ArrayList<>();
 
         mCursor = null;
@@ -144,9 +148,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
                     Toast.makeText(mContext,movie.getTitle()+" is Long pressed at position "+ position,
                             Toast.LENGTH_SHORT).show();
                 }else{
-                    Intent intent = new Intent(mContext,MovieDetailActivity.class);
-                    intent.putExtra("movieTag",movie);
-                    view.getContext().startActivity(intent);
+
+                    ((MainActivityFragment.CallBack)mActivity).onItemSelected(movie);
                 }
             }
         });
