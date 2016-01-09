@@ -14,6 +14,7 @@
     android:layout_height="wrap_content"
     android:clipToPadding="true"
     android:orientation ="vertical"
+    android:choiceMode= "singleChoice"
     />
 
 </android.support.v4.widget.SwipeRefreshLayout>

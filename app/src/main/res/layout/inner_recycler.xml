@@ -21,6 +21,7 @@
         android:layout_gravity="center_vertical|center_horizontal"
         android:clipToPadding="true"
         android:orientation ="vertical"
+        android:choiceMode = "singleChoice"
         />
 
 
