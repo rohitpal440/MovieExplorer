@@ -3,12 +3,10 @@ package com.technobells.rohit.movieexplorer.adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.database.AbstractCursor;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.database.MergeCursor;
 import android.net.Uri;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -44,7 +42,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private final String LOG_TAG = MovieAdapter.class.getSimpleName();
     private ArrayList<Object> movieItems;
 
-    private MergeCursor mergeCursor;
     private Cursor movieCursor;
     private Cursor videoCursor;
     private Cursor reviewCursor;
@@ -66,24 +63,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         reviewCursor = null;
         IS_YOUTUBE_INSTALLED = (YouTubeApiServiceUtil.isYouTubeApiServiceAvailable(mContext)== YouTubeInitializationResult.SUCCESS);
     }
-//
-//    public void setMovieCursor(Cursor movieCursor){
-//        this.movieCursor = movieCursor;
-//        setMovieDataSetObserver();
-//        if(this.movieCursor != null && videoCursor != null) mDataValid =true;
-//        notifyDataSetChanged();
-//    }
-//    public void setVideoCursor(Cursor videoCursor){
-//        this.videoCursor = videoCursor;
-//        setVideoDataSetObserver();
-//        if(this.movieCursor != null && videoCursor != null) mDataValid =true;
-//        notifyDataSetChanged();
-//    }
-//    public void setReviewCursor(Cursor reviewCursor){
-//        this.reviewCursor = reviewCursor;
-//        setReviewDataSetObserver();
-//        notifyDataSetChanged();
-//    }
     public void setMovieDataSetObserver(){
         movieDataSetObserver = new NotifyingDataSetObserver();
         if (movieCursor != null) {
@@ -163,7 +142,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             }else {
                 setMovieDataSetObserver();
             }
-           // mRowIdColumn = newCursor.getColumnIndexOrThrow(MovieUtils.MOVIE_COLUMN[MovieUtils.COL_MOVIE_ID]);
             mRowIdColumn =0;
             mDataValid = true;
             notifyDataSetChanged();
@@ -171,7 +149,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             mRowIdColumn = -1;
             mDataValid = false;
             notifyDataSetChanged();
-            //There is no notifyDataSetInvalidated() method in RecyclerView.Adapter
         }
         return oldCursor;
     }
@@ -191,7 +168,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             }else {
                 setVideoDataSetObserver();
             }
-            //mRowIdColumn = newCursor.getColumnIndexOrThrow(MovieUtils.VIDEO_COLUMN[MovieUtils.COL_VIDEO_ID]);
+
             mRowIdColumn =0;
             mDataValid = true;
             notifyDataSetChanged();
@@ -199,7 +176,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             mRowIdColumn = -1;
             mDataValid = false;
             notifyDataSetChanged();
-            //There is no notifyDataSetInvalidated() method in RecyclerView.Adapter
         }
         return oldCursor;
     }
@@ -219,7 +195,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             }else {
                 setReviewDataSetObserver();
             }
-            //mRowIdColumn = newCursor.getColumnIndexOrThrow(MovieUtils.REVIEW_COLUMN[MovieUtils.COL_REVIEW_ID]);
             mRowIdColumn = 0;
             mDataValid = true;
             notifyDataSetChanged();
@@ -227,7 +202,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             mRowIdColumn = -1;
             mDataValid = false;
             notifyDataSetChanged();
-            //There is no notifyDataSetInvalidated() method in RecyclerView.Adapter
         }
         return oldCursor;
     }
@@ -236,7 +210,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         movieItems.add(pos,object);
         Log.i(LOG_TAG,"Appending Object a pos:" + pos);
         notifyItemRangeInserted(pos,1);
-
     }
 
     private class NotifyingDataSetObserver extends DataSetObserver {
@@ -252,7 +225,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             super.onInvalidated();
             mDataValid = false;
             notifyDataSetChanged();
-            //There is no notifyDataSetInvalidated() method in RecyclerView.Adapter
         }
     }
 
@@ -263,9 +235,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         notifyItemRangeInserted(pos,list.size());
     }
 
-    /*
-    clear data in MovieAdapter
-     */
     public void clear(){
         movieItems.clear();
         notifyDataSetChanged();
@@ -277,31 +246,14 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         else super.setHasStableIds(false);
     }
 
-    //Applicable only on API level 23
-//    public void setExtra(Cursor cursor,int type){
-//        Bundle bundle = new Bundle();
-//        bundle.putInt("ITEM_TYPE",type);
-//        cursor.setExtras(bundle);
-//        //cursor.respond(bundle);
-//       // ((AbstractCursor) cursor).setExtras(bundle);
-//    }
-
-//    public int getExtra(Cursor cursor){
-//        Bundle bundle = cursor.getExtras();
-//        return bundle.getInt("ITEM_TYPE");
-//    }
-
     public Cursor getCursorAtPosition(int pos){
         if(pos == 0){
-            //setExtra(movieCursor,MovieUtils.MOVIE_DETAIL);
             return movieCursor;
         }else if(pos <= videoCursor.getCount()){
             videoCursor.moveToPosition(pos - 1);
-            //setExtra(videoCursor,MovieUtils.VIDEO);
             return videoCursor;
         }else if(pos <= videoCursor.getCount() + reviewCursor.getCount()){
             reviewCursor.moveToPosition(pos - (videoCursor.getCount() +1));
-            //setExtra(reviewCursor,MovieUtils.REVIEW);
             return reviewCursor;
         }else {
             Log.e(LOG_TAG,"No cursor at pos " + pos);
@@ -314,7 +266,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         if(!MovieDetailActivityFragment.FAVORITE) return -1;
         Cursor cursor = getCursorAtPosition(position);
         if (mDataValid && getItemCount() != 0 && cursor != null) {
-            //switch (getExtra(cursor)){
             switch (cursor.getColumnCount()){
                 case MovieUtils.MOVIE_DETAIL:
                     return cursor.getLong(MovieUtils.COL_MOVIE_ID);
@@ -330,7 +281,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public int getItemViewType(int position){
         if(MovieDetailActivityFragment.FAVORITE){
-           // return getExtra(getCursorAtPosition(position));
             return getCursorAtPosition(position).getColumnCount();
         }else {
             Object object = movieItems.get(position);
@@ -383,8 +333,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             }
 
             default:{
-//                View view = inflater.inflate(R.layout.header_item,parent,false);
-//                viewHolder = new HeaderViewHolder(view);
                 viewHolder = null;
                 break;
             }
@@ -421,9 +369,9 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     }
 
-    /*
-   Create all type of View Holders
-    */
+
+     //   Create all type of View Holders
+
     public static class MovieDetailViewHolder extends RecyclerView.ViewHolder {
         @Bind(R.id.movie_item_backdrop_poster)
         ImageView backDropPoster;
@@ -449,8 +397,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     public static class VideoViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener{
-
-        //private ItemClickListener clickListener;
         @Bind(R.id.video_item_poster)
         ImageView poster;
         @Bind(R.id.video_item_name)
@@ -489,7 +435,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v=" + videoId));
                         v.getContext().startActivity(Intent.createChooser(intent, "Open Video using"));
                     }
-
                     return true;
                 }
             });
@@ -521,37 +466,29 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 //        }
 
         @Override
-        public void onClick(View view){
-
-            //this.clickListener.onClick(view,getPosition(),false);
-        }
+        public void onClick(View view){ }
 
         @Override
         public boolean onLongClick(View view){
             //clickListener.onClick(view,getPosition(),true);
             return true;
         }
-
     }
 
     public static class ReviewViewHolder extends RecyclerView.ViewHolder {
-
         @Bind(R.id.review_item_title)
         TextView name;
         @Bind(R.id.review_item_content)
         TextView content;
-
         public ReviewViewHolder(View view){
             super(view);
             ButterKnife.bind(this,view);
         }
-
     }
 
     public static class HeaderViewHolder extends RecyclerView.ViewHolder {
         @Bind(R.id.header_item_title)
         TextView title;
-
         public HeaderViewHolder(View view){
             super(view);
             ButterKnife.bind(this,view);
@@ -564,7 +501,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         TextView sectionTitle;
         @Bind(R.id.inner_recycler_view)
         RecyclerView innerRecyclerView;
-
         HorizontalRecyclerAdapter innerRecyclerAdapter;
         public InnerRecyclerViewHolder(View view){
             super(view);
@@ -578,25 +514,26 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         Movie movie;
         if (MovieDetailActivityFragment.FAVORITE){
             movie = MovieUtils.getMovieFromCursor(getCursorAtPosition(pos),getActualPositionInCursor(pos));
-        }else movie= (Movie) movieItems.get(pos);
-
-        /* Possible Image size are "w92", "w154", "w185", "w342", "w500", "w780", or "original" */
-        //final String SIZE="w185/";
-        holder.posterImage.setAdjustViewBounds(true);
-        if(MovieDetailActivityFragment.FAVORITE){
-            Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getPosterPath())).fit().placeholder(R.drawable.placeholder).into(holder.posterImage);
-            Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getBackdropPath())).placeholder(R.drawable.loading_placeholder).into(holder.backDropPoster);
-
-        }else {
-            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w185/" + movie.getPosterPath()).placeholder(R.drawable.placeholder).fit().into(holder.posterImage);
-            Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w500/"+ movie.getBackdropPath()).placeholder(R.drawable.loading_placeholder).fit().into(holder.backDropPoster);
+        }else{
+            movie= (Movie) movieItems.get(pos);
         }
 
-        holder.title.setText(movie.getTitle());
-        holder.releaseDate.setText(MovieUtils.formateDate(movie.getReleaseDate(),"yyyy-MM-dd","MMM, yyyy"));
-        holder.rating.setText(String.format("%.1f",movie.getVoteAverage()) + "/");
-        holder.voteCount.setText("Voted By "+Long.toString(movie.getVoteCount()) + " people");
-        holder.plotSummary.setText(movie.getOverview());
+        /* Possible Image size are "w92", "w154", "w185", "w342", "w500", "w780", or "original" */
+        holder.posterImage.setAdjustViewBounds(true);
+        if(movie != null){
+            if(MovieDetailActivityFragment.FAVORITE){
+                Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getPosterPath())).fit().placeholder(R.drawable.placeholder).into(holder.posterImage);
+                Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/moviePoster/"+movie.getBackdropPath())).placeholder(R.drawable.loading_placeholder).into(holder.backDropPoster);
+            }else {
+                Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w185/" + movie.getPosterPath()).placeholder(R.drawable.placeholder).fit().into(holder.posterImage);
+                Picasso.with(mContext).load(MovieUtils.BASE_URL_IMAGE + "w500/"+ movie.getBackdropPath()).placeholder(R.drawable.loading_placeholder).fit().into(holder.backDropPoster);
+            }
+            holder.title.setText(movie.getTitle());
+            holder.releaseDate.setText(MovieUtils.formatDate(movie.getReleaseDate(),"yyyy-MM-dd","MMM, yyyy"));
+            holder.rating.setText(String.format("%.1f",movie.getVoteAverage()) + "/");
+            holder.voteCount.setText("Voted By "+Long.toString(movie.getVoteCount()) + " people");
+            holder.plotSummary.setText(movie.getOverview());
+        }
 
     }
 
@@ -608,26 +545,33 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             video = (Video) movieItems.get(pos);
         }
         final String QUALITY = "/hqdefault.jpg";
-        if(MovieDetailActivityFragment.FAVORITE){
-            Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/videoPoster/"+video.getKey()+".jpg")).placeholder(R.drawable.grey_placeholder)
-                    .into(holder.poster);
-        }else {
-            Picasso.with(mContext).load(MovieUtils.BASE_URL_VIDEO_THUMBNAIL + video.getKey() + QUALITY).placeholder(R.drawable.grey_placeholder)
-                    .into(holder.poster);
+        if(video != null){
+            if(MovieDetailActivityFragment.FAVORITE){
+                Picasso.with(mContext).load(new File( mContext.getFilesDir().getPath() + "/videoPoster/"+video.getKey()+".jpg")).placeholder(R.drawable.grey_placeholder)
+                        .into(holder.poster);
+            }else {
+                Picasso.with(mContext).load(MovieUtils.BASE_URL_VIDEO_THUMBNAIL + video.getKey() + QUALITY).placeholder(R.drawable.grey_placeholder)
+                        .into(holder.poster);
+            }
+            holder.setActivity(mActivity);
+            holder.name.setText(video.getName());
+            holder.type.setText(video.getType());
+            holder.lang.setText(video.getIso6391());
+            holder.setVideoId(video.getKey());
+            String movieName = "MovieTitle";
+            if(MovieDetailActivityFragment.FAVORITE){
+                if(movieCursor.moveToFirst()) {
+                    movieName = movieCursor.getString(MovieUtils.COL_MOVIE_TITLE);
+                }else {
+                    Log.e(LOG_TAG,"Invalid Movie Cursor");
+                }
+            }else {
+                Movie movie = (Movie) movieItems.get(0);
+                movieName = movie.getTitle();
+            }
+            holder.setMovieName(movieName);
         }
-        holder.setActivity(mActivity);
-        holder.name.setText(video.getName());
-        holder.type.setText(video.getType());
-        holder.lang.setText(video.getIso6391());
-        holder.setVideoId(video.getKey());
-        String movieName;
-        if(MovieDetailActivityFragment.FAVORITE){
-            movieName = movieCursor.getString(MovieUtils.COL_MOVIE_TITLE);
-        }else {
-            Movie movie = (Movie) movieItems.get(0);
-            movieName = movie.getTitle();
-        }
-        holder.setMovieName(movieName);
+
     }
 
     public void configureReviewViewHolder(ReviewViewHolder holder,int pos){
@@ -637,8 +581,11 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         }else {
             review = (Review) movieItems.get(pos);
         }
-        holder.name.setText(review.getAuthor());
-        holder.content.setText(review.getContent());
+        if(review != null){
+            holder.name.setText(review.getAuthor());
+            holder.content.setText(review.getContent());
+        }
+
     }
 
     public void configureHeaderViewHolder(HeaderViewHolder holder,int pos){

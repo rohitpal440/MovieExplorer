@@ -2,7 +2,6 @@ package com.technobells.rohit.movieexplorer.adapter;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.support.v7.widget.RecyclerView;
@@ -17,7 +16,6 @@ import android.widget.Toast;
 import com.squareup.picasso.Picasso;
 import com.technobells.rohit.movieexplorer.MainActivityFragment;
 import com.technobells.rohit.movieexplorer.utilities.ItemClickListener;
-import com.technobells.rohit.movieexplorer.MovieDetailActivity;
 import com.technobells.rohit.movieexplorer.R;
 import com.technobells.rohit.movieexplorer.model.Movie;
 import com.technobells.rohit.movieexplorer.utilities.MovieUtils;
@@ -129,7 +127,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
             movie = movies.get(position);
         }
         holder.ratingTv.setText(String.format("%.1f",movie.getVoteAverage()));
-        String releaseDate = MovieUtils.formateDate(movie.getReleaseDate(),"yyyy-MM-dd","yyyy");
+        String releaseDate = MovieUtils.formatDate(movie.getReleaseDate(),"yyyy-MM-dd","yyyy");
         holder.releaseDateTv.setText(releaseDate);
 
         /* Possible Image size are "w92", "w154", "w185", "w342", "w500", "w780", or "original" */

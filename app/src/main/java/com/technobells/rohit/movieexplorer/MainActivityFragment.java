@@ -1,5 +1,6 @@
 package com.technobells.rohit.movieexplorer;
 
+import android.app.ProgressDialog;
 import android.database.Cursor;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -17,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -57,7 +59,9 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
     private String sortBy = "popularity.desc"; //Default sorting order
     private String sortOrder = FavoriteMoviesContract.MovieEntry.COLUMN_POPULARITY + " DESC ";// for database sorting.
     private int page = 1;
+    private boolean isRefreshing = false;
     private MenuItem favoriteMenuItem;
+    private ProgressDialog progressDialog;
 
     @Bind(R.id.fragmen_main_grid_recycler_view)
     RecyclerView recyclerView;
@@ -76,21 +80,12 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
                              Bundle savedInstanceState) {
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        /*
-        get the dimension of device screen
-         */
         DisplayMetrics metrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
         MovieUtils.SCREEN_DENSITY = metrics.density;
         int columnCount = (metrics.widthPixels/(int)getResources().getDimension(R.dimen.movie_card_width_in_grid));
-        Log.i(LOG_TAG,"Screen Density : " + metrics.density
-                                    +"\nColumn width in Resources :" + getResources().getDimension(R.dimen.movie_card_width_in_grid)
-                                    +"\n Calculated Column Count :" + columnCount
-                                    +"\nWidth Pixels are :" + metrics.widthPixels
-        );
         final GridLayoutManager gridLayoutManager =
                 new GridLayoutManager(getContext(),columnCount>2?columnCount:2);
-
         movieAdapter = new MovieAdapter(getActivity());
         ButterKnife.bind(this,rootView);
         recyclerView.setLayoutManager(gridLayoutManager);
@@ -99,22 +94,34 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                isRefreshing =true;
                 page =1;
                 movieAdapter.clear();
                 updateMoviePoster();
-
             }
         });
+        recyclerView.setOnTouchListener(
+                new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        if (isRefreshing) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                }
+        );
 
         // Configure the refreshing colors
         swipeRefreshLayout.setColorSchemeResources(android.R.color.holo_blue_bright,
                 android.R.color.holo_green_light,
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
-
         /**
          *  Creating the listener for infinite scroll.
          */
+        progressDialog = new ProgressDialog(getActivity());
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener(){
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx,int dy){
@@ -122,6 +129,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
                     if(gridLayoutManager.getChildCount() + gridLayoutManager.findFirstVisibleItemPosition()
                             >= gridLayoutManager.getItemCount() ){
                         page++;
+                        showProgressDialog("Fetching More Movies...");
                         updateMoviePoster();
                     }
                 }
@@ -133,19 +141,15 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
                 || ! savedInstanceState.containsKey(SAVED_MOVIE_LIST)
                 || ! savedInstanceState.containsKey(SAVED_SORT_PREF)
                 || ! savedInstanceState.containsKey(SAVED_PAGE_NO)){
+            showProgressDialog("Fetching Movies...");
             updateMoviePoster();
         }else{
-
             movieArrayList = savedInstanceState.getParcelableArrayList(SAVED_MOVIE_LIST);
             movieAdapter.addAll( movieArrayList);
             sortBy=savedInstanceState.getString(SAVED_SORT_PREF);
             page = savedInstanceState.getInt(SAVED_PAGE_NO);
             favoriteState = savedInstanceState.getBoolean(SAVED_FAV_STATE);
-
         }
-
-
-
         return rootView;
     }
 
@@ -200,6 +204,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
                         page = 1;
                         movieArrayList.clear();
                         movieAdapter.clear();
+                        showProgressDialog("Fetching Movies...");
                         updateMoviePoster();
                     }
                 }
@@ -215,6 +220,7 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
                         page = 1;
                         movieArrayList.clear();
                         movieAdapter.clear();
+                        showProgressDialog("Fetching Movies...");
                         updateMoviePoster();
                     }
                 }
@@ -223,6 +229,11 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    public void showProgressDialog(String message){
+        progressDialog.setMessage(message);
+        progressDialog.show();
     }
 
     public void showFavoriteMovies(){
@@ -302,7 +313,9 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
 
                 }
                 swipeRefreshLayout.setRefreshing(false);
+                isRefreshing = false;
                 load = true;
+                progressDialog.dismiss();
             }
             @Override
             public void onFailure(Throwable t){
@@ -311,6 +324,8 @@ MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<C
                         .setAction("Action", null).show();
                 load = true;
                 swipeRefreshLayout.setRefreshing(false);
+                isRefreshing = false;
+                progressDialog.dismiss();
             }
         });
 

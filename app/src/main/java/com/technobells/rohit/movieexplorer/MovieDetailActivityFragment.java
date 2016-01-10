@@ -1,5 +1,6 @@
 package com.technobells.rohit.movieexplorer;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -80,7 +81,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
     private final String SAVED_CAST_LIST = "casts";
     private final String SAVED_SIMILAR_MOVIES_LIST = "similarMovies";
     SharedPreferences sharedPrefMovieList;
-
+    ProgressDialog progressDialog;
     @Bind(R.id.fragment_movie_detail_recycler_view)
     RecyclerView recyclerView;
     @Bind(R.id.fragment_movie_detail_fab)
@@ -124,7 +125,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                         Log.e(LOG_TAG,"Retrofit Review Response error : "+str);
 
                     }catch (IOException e){
-                        Log.e(LOG_TAG,"IOexception inside the response");
+                        Log.e(LOG_TAG,"IOException inside the response");
                     }
                 }
 
@@ -164,7 +165,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                         Log.e(LOG_TAG,"Retrofit Cast Response error : "+str);
 
                     }catch (IOException e){
-                        Log.e(LOG_TAG,"IOexception inside the response");
+                        Log.e(LOG_TAG,"IOException inside the response");
                     }
 
                 }
@@ -173,9 +174,6 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
             @Override
             public void onFailure(Throwable t){
                 Log.e(LOG_TAG,"Retrofit Response failure for Cast Fetch Request");
-//                if(++progress >= 4){
-//                    swipeRefreshLayout.setRefreshing(false);
-//                }
             }
         });
     }
@@ -191,16 +189,14 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                 JsonRequestMovieReviewResult jsonRequestMovieReviewResult = response.body();
                 if (jsonRequestMovieReviewResult != null) {
                     ArrayList<Review> results = (ArrayList<Review>) jsonRequestMovieReviewResult.getReviews();
-                    if(results.size() == 0) results.add(MovieUtils.NO_REVIEW);
-
-                        ArrayList<Object> temp = new ArrayList<Object>();
-                        temp.add("Reviews");
-                        temp.addAll(results);
-                        //Log.i(LOG_TAG,"Got "+results.size()+" Reviews.\nInserting Review Section with "+temp.size()+" values.");
-                        mAdapter.appendObjectList(temp,(videos.size()>0?videos.size()+1:0)+(casts.size() > 0 ?1:0)+1);
-                        reviews.clear();
-                        reviews.addAll(results);
-
+                    if(results.size() == 0)
+                        results.add(MovieUtils.NO_REVIEW);
+                    ArrayList<Object> temp = new ArrayList<Object>();
+                    temp.add("Reviews");
+                    temp.addAll(results);
+                    mAdapter.appendObjectList(temp,(videos.size()>0?videos.size()+1:0)+(casts.size() > 0 ?1:0)+1);
+                    reviews.clear();
+                    reviews.addAll(results);
                 }else{
                     Log.e(LOG_TAG,"Getting null object of (REVIEW) JsonRequestMovieReviewResult ");
                     try {
@@ -208,7 +204,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                         Log.e(LOG_TAG,"Retrofit Review Response error : "+str);
 
                     }catch (IOException e){
-                        Log.e(LOG_TAG,"IOexception inside the response");
+                        Log.e(LOG_TAG,"IOException inside the response");
                     }
                 }
 
@@ -376,7 +372,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
             Log.e(LOG_TAG,"Got NULL Bundle");
             fab.hide();
         }
-
+        progressDialog = new ProgressDialog(getActivity());
         Log.i(LOG_TAG,"Inside Detail Activity");
         sharedPrefMovieList = getContext().getSharedPreferences(MovieUtils.FAVORITE_LIST, Context.MODE_PRIVATE);
         if (movie != null) {
@@ -459,6 +455,8 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
      * Insert Movie and its related Information into the database.
      */
     public void addMovieDetailToDatabase(){
+        progressDialog.setMessage("Saving...");
+        progressDialog.show();
         long movieRowId = MovieUtils.addMovieToFavorite(getContext(),movie);
         int videoRowInserted = MovieUtils.addVideosRelatedToMovie(getContext(),movieRowId,videos);
         int reviewRowInserted = MovieUtils.addReviewsRelatedToMovie(getContext(),movieRowId,reviews);
@@ -466,6 +464,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
         saveMoviePosters();
         saveVideoThumbnails();
         sharedPrefMovieList.edit().putBoolean(Long.toString(movie.getId()),true).apply();
+        progressDialog.dismiss();
     }
 
     public void saveMoviePosters(){
@@ -560,6 +559,8 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
 
     public void deleteMovieDetailsFromDatabase(){
         long movieRowId = MovieUtils.getMovieRowFromDatabase(getContext(),movie.getId());
+        progressDialog.setMessage("Deleting...");
+        progressDialog.show();
         deleteVideoThumbnails();
         deleteMoviePosters();
         int videoRowsDeleted = MovieUtils.deleteVideosFromDatabase(getContext(),movieRowId);
@@ -568,14 +569,14 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
         sharedPrefMovieList.edit().remove(Long.toString(movie.getId())).apply();
         if(FAVORITE){
             Log.i(LOG_TAG,"Pressing Back Button");
-
+            progressDialog.dismiss();
             if(MovieUtils.TWO_PANE){
                 getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
             }else {
                 getActivity().onBackPressed();
             }
         }
-        //Log.i(LOG_TAG,movieRowsDeleted +" Movie rows deleted\n"+videoRowsDeleted+ " Video rows deleted\n"+reviewRowsDeleted+ " Review rows Deleted");
+        Log.i(LOG_TAG,movieRowsDeleted +" Movie rows deleted\n"+videoRowsDeleted+ " Video rows deleted\n"+reviewRowsDeleted+ " Review rows Deleted");
     }
 
     public void deleteMoviePosters(){

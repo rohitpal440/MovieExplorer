@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 import com.technobells.rohit.movieexplorer.MainActivityFragment;
@@ -194,7 +193,7 @@ public class HorizontalRecyclerAdapter extends RecyclerView.Adapter<RecyclerView
     public void configureSimilarMovieViewHolder(SimilarMovieViewHolder holder,int pos){
         Movie movie = (Movie) itemsConnectedtoMovie.get(pos);
         holder.rating.setText(String.format("%.1f",movie.getVoteAverage()));
-        holder.releaseDate.setText(MovieUtils.formateDate(movie.getReleaseDate(),"yyyy-MM-dd","yyyy"));
+        holder.releaseDate.setText(MovieUtils.formatDate(movie.getReleaseDate(),"yyyy-MM-dd","yyyy"));
 
         holder.context = mContext;
         holder.pos = pos;

@@ -86,21 +86,27 @@ public class MovieUtils {
     }
     public static final Review NO_REVIEW = new Review();
     static {
-        NO_REVIEW.setAuthor("There is No Review For this Movie");
+        NO_REVIEW.setAuthor("Reviews are not available for this Movie");
         NO_REVIEW.setContent(" ");
+        NO_REVIEW.setId("NO_ID");
+        NO_REVIEW.setUrl("-");
     }
 
-    public static String formateDate(String dateString,String givenFormat,String requiredFormat){
-        Date date;
+    public static String formatDate(String dateString, String givenFormat, String requiredFormat){
+
         SimpleDateFormat fromSrc = new SimpleDateFormat(givenFormat);
         SimpleDateFormat myFormat = new SimpleDateFormat(requiredFormat);
 
-        try {
-            dateString = myFormat.format(fromSrc.parse(dateString));
-            return dateString;
-        } catch (ParseException e) {
-            Log.e(LOG_TAG,"Error in Parsing the date");
-        }
+       if(dateString != null){
+           try {
+               dateString = myFormat.format(fromSrc.parse(dateString));
+               return dateString;
+           } catch (ParseException e) {
+               Log.e(LOG_TAG,"Error in Parsing the date");
+           }
+       }else {
+           Log.e(LOG_TAG,"Null Date Value Given to the Function");
+       }
         return dateString;
     }
 
