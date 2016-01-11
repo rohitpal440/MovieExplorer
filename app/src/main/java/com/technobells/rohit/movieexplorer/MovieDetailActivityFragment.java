@@ -576,6 +576,7 @@ public class MovieDetailActivityFragment extends Fragment implements LoaderManag
                 getActivity().onBackPressed();
             }
         }
+        progressDialog.dismiss();
         Log.i(LOG_TAG,movieRowsDeleted +" Movie rows deleted\n"+videoRowsDeleted+ " Video rows deleted\n"+reviewRowsDeleted+ " Review rows Deleted");
     }
 
